@@ -56,7 +56,7 @@ public class ImageHandler implements Runnable
         Mat temp = new Mat();
         temp = prepareImage( original );
 
-        temp = deskew( temp, calcSkew( temp ) );
+        temp = deskew( temp );
 
         temp = morphTransform( temp );
 
@@ -123,23 +123,13 @@ public class ImageHandler implements Runnable
     }
 
     /**
-     * Calculates the skew of the supplied image
+     * Calculates the skew of the supplied binary inverse image.
      * 
-     * @param skewed The image to calculate the angle of skew from.
+     * @param inverse The image to calculate the angle of skew from.
      * @return The angle at which the image is skewed.
      */
-    private double calcSkew( Mat skewed )
+    private double calcSkew( Mat inverse )
     {
-        Mat inverse = new Mat();
-
-        Core.bitwise_not( skewed, inverse );
-        Mat element = Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( 3, 3 ) );
-
-        //We can now perform our erosion, we must declare our rectangle-shaped structuring element and call the erode function
-        Imgproc.erode( inverse, inverse, element );
-
-        writeImage( inverse, "I" );
-
         Mat whiteLoc = Mat.zeros( inverse.size(), inverse.type() );
         Core.findNonZero( inverse, whiteLoc );
 
@@ -171,13 +161,21 @@ public class ImageHandler implements Runnable
      * @param angle The angle to deskew by
      * @return Returns the deskewed image
      */
-    private Mat deskew( Mat img, double angle )
+    private Mat deskew( Mat img )
     {
         Point center = new Point( img.width() / 2, img.height() / 2 );
-        Mat rotImage = Imgproc.getRotationMatrix2D( center, angle, 1.0 );
+
+        Mat inverse = new Mat();
+
+        Core.bitwise_not( img, inverse );
+
+        writeImage( inverse, "I" );
+
+        Mat rotImage = Imgproc.getRotationMatrix2D( center, calcSkew( inverse ), 1.0 );
         //1.0 means 100 % scale
         Size size = new Size( img.width(), img.height() );
-        Imgproc.warpAffine( img, img, rotImage, size, Imgproc.INTER_LINEAR ); //Allows for the image to be rotated so that it fits the original image size
+        Imgproc.warpAffine( inverse, inverse, rotImage, size, Imgproc.INTER_LINEAR ); //Allows for the image to be rotated so that it fits the original image size
+        Core.bitwise_not( inverse, img );
 
         writeImage( img, "DS" );
 
