@@ -12,7 +12,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-public class ImageHandler
+public class ImageHandler implements Runnable
 {
 
     private final int BILATERAL_FILTER_KERNEL_LENGTH = 40;
@@ -47,7 +47,7 @@ public class ImageHandler
      * 
      * @return The pre-processed image.
      */
-    public Mat run()
+    public void run()
     {
 
         currentSuffix = "";
@@ -58,9 +58,9 @@ public class ImageHandler
 
         temp = deskew( temp, calcSkew( temp ) );
 
-        current = temp;
+        temp = morphTransform( temp );
 
-        return current;
+        current = temp;
 
     }
 
@@ -171,18 +171,36 @@ public class ImageHandler
      * @param angle The angle to deskew by
      * @return Returns the deskewed image
      */
-    public Mat deskew( Mat src, double angle )
+    private Mat deskew( Mat img, double angle )
     {
-        Point center = new Point( src.width() / 2, src.height() / 2 );
+        Point center = new Point( img.width() / 2, img.height() / 2 );
         Mat rotImage = Imgproc.getRotationMatrix2D( center, angle, 1.0 );
-        System.out.println( angle );
         //1.0 means 100 % scale
-        Size size = new Size( src.width(), src.height() );
-        Imgproc.warpAffine( src, src, rotImage, size, Imgproc.INTER_LINEAR ); //Allows for the image to be rotated so that it fits the original image size
+        Size size = new Size( img.width(), img.height() );
+        Imgproc.warpAffine( img, img, rotImage, size, Imgproc.INTER_LINEAR ); //Allows for the image to be rotated so that it fits the original image size
 
-        writeImage( src, "DS" );
+        writeImage( img, "DS" );
 
-        return src;
+        return img;
+    }
+
+    /**
+     * Applies the required morphological transformations to the image. It will also write the transformed image to file if the createImages boolean of the image handler is true
+     * 
+     * @param img The image to apply the transformations to.
+     * @return The image after it has been transformed.
+     */
+    private Mat morphTransform( Mat img )
+    {
+        Imgproc.dilate( img, img, Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( 2, 2 ) ) );
+
+        writeImage( img, "MTD" );
+
+        Imgproc.erode( img, img, Imgproc.getStructuringElement( Imgproc.MORPH_RECT, new Size( 3, 3 ) ) );
+
+        writeImage( img, "MTE" );
+
+        return img;
     }
 
     /**

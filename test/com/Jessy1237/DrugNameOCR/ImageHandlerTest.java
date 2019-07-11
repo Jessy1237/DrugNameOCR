@@ -12,7 +12,6 @@ public class ImageHandlerTest
         {
             ImageHandler ih = new ImageHandler( args[0], true );
             ih.run();
-            ih.run();
         }
         catch ( Exception e )
         {
