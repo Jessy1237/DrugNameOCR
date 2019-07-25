@@ -80,6 +80,16 @@ public class ImageHandler implements Runnable
     }
 
     /**
+     * Gets the current path to the current image after applying all effects etc.
+     * 
+     * @return The path to the current image
+     */
+    public String getCurrentImagePath()
+    {
+        return fileName + currentSuffix + extension;
+    }
+
+    /**
      * Prepares the given image by applying a pre-process for OCR. It will write each effect applied to the image to file if the createImages boolean of the image handler is true.
      * 
      * @param img The image to pre-process
@@ -136,7 +146,7 @@ public class ImageHandler implements Runnable
         //Create an empty Mat and pass it to the function
         MatOfPoint matOfPoint = new MatOfPoint( whiteLoc );
 
-        //Translate MatOfPoint to MatOfPoint2f in order to user at a next step
+        //Translate MatOfPoint to MatOfPoint2f in order to use at a next step
         MatOfPoint2f mat2f = new MatOfPoint2f();
         matOfPoint.convertTo( mat2f, CvType.CV_32FC2 );
 
