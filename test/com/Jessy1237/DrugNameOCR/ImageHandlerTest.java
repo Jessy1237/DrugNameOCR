@@ -2,6 +2,8 @@ package com.Jessy1237.DrugNameOCR;
 
 import org.opencv.core.Core;
 
+import com.Jessy1237.DrugNameOCR.Handlers.ImageHandler;
+
 public class ImageHandlerTest
 {
 

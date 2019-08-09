@@ -1,4 +1,7 @@
-package com.Jessy1237.DrugNameOCR;
+package com.Jessy1237.DrugNameOCR.Handlers;
+
+import java.util.List;
+import java.util.Random;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -11,6 +14,8 @@ import org.opencv.core.RotatedRect;
 import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
+
+import com.Jessy1237.DrugNameOCR.BoundingBox;
 
 public class ImageHandler implements Runnable
 {
@@ -54,6 +59,7 @@ public class ImageHandler implements Runnable
 
         //Make a copy of our original image so we can preprocess it
         Mat temp = new Mat();
+
         temp = prepareImage( original );
 
         temp = deskew( temp );
@@ -99,29 +105,38 @@ public class ImageHandler implements Runnable
     {
 
         Mat temp = new Mat();
-        //Apply bilateral Filtering
-        Imgproc.bilateralFilter( img, temp, BILATERAL_FILTER_KERNEL_LENGTH, BILATERAL_FILTER_KERNEL_LENGTH * 2, BILATERAL_FILTER_KERNEL_LENGTH / 2 );
 
-        writeImage( temp, "BF" );
-
-        //Convert the image to greyscale
-        Imgproc.cvtColor( temp, temp, Imgproc.COLOR_RGB2GRAY );
-
-        writeImage( temp, "GS" );
-
-        MatOfDouble mean = new MatOfDouble();
-        MatOfDouble stddev = new MatOfDouble();
-
-        Core.meanStdDev( temp, mean, stddev ); //gets the parameters of the greyscaled image, essentially the mean and std of the histogram as we only have one channel now.
-
-        if ( stddev.toList().get( 0 ) < 40 ) //TODO: 40 seems to be a good value for now but future work is to investigate this value further. Max value is 255 so we're checking that the histrogram is quite spread hence there is good contrasting so Hist. Eq. is not required.
+        if ( isGrayscaleImage( img ) ) //If the image is grayscale then we don't need to apply all the filtering and contrast improvement methods as these hinder grayscale images.
         {
-            //Correct the contrast with histogram equalisation
-            Imgproc.equalizeHist( temp, temp );
-
-            writeImage( temp, "HE" );
-
+            Imgproc.cvtColor( img, temp, Imgproc.COLOR_RGB2GRAY ); //We do however have to change the type of image to grayscale as we read it in as a colour image so it has 3 channels but we need it in 2 channels
         }
+        else
+        {
+            //Apply bilateral Filtering
+            Imgproc.bilateralFilter( img, temp, BILATERAL_FILTER_KERNEL_LENGTH, BILATERAL_FILTER_KERNEL_LENGTH * 2, BILATERAL_FILTER_KERNEL_LENGTH / 2 );
+
+            writeImage( temp, "BF" );
+
+            //Convert the image to greyscale
+            Imgproc.cvtColor( temp, temp, Imgproc.COLOR_RGB2GRAY );
+
+            writeImage( temp, "GS" );
+
+            MatOfDouble mean = new MatOfDouble();
+            MatOfDouble stddev = new MatOfDouble();
+
+            Core.meanStdDev( temp, mean, stddev ); //gets the parameters of the greyscaled image, essentially the mean and std of the histogram as we only have one channel now.
+
+            if ( stddev.toList().get( 0 ) < 30 ) //TODO: 30 seems to be a good value for now but future work is to investigate this value further. Max value is 255 so we're checking that the histrogram is quite spread hence there is good contrasting so Hist. Eq. is not required.
+            {
+                //Correct the contrast with histogram equalisation
+                Imgproc.equalizeHist( temp, temp );
+
+                writeImage( temp, "HE" );
+
+            }
+        }
+
         //Apply adaptive thresholding to get the binarised image
         //Adaptive mean seems to give the better result when compared to gaussian which has some missing text.
         //also lowering the C value to 15 seemed to fix the issue of the finger shadow thresholding out the nearing text as it lowered the value that is minused from the mean.
@@ -212,6 +227,81 @@ public class ImageHandler implements Runnable
     }
 
     /**
+     * Creates an image with overlaying bounding boxes as defined in the list. The created image is written to the image directory but is not set to the current image of the handler. The colour of the
+     * bounding boxes is pseudo random using the java random class, however the seed is set to the current image path, so if the method is used again on the same image handler the same coloured boxes
+     * are generated. <b>NOTE:</b> This method does nothing if the image handler has not previously run before.
+     * 
+     * @param boxes The list of Bounding Boxes to draw on the image
+     */
+    public void drawBoundingBoxes( List<BoundingBox> boxes, int thickness )
+    {
+        if ( hasRun() )
+        {
+            Mat temp = new Mat();
+            Imgproc.cvtColor( current, temp, Imgproc.COLOR_GRAY2RGB );
+            Random rand = new Random();
+            rand.setSeed( getCurrentImagePath().hashCode() );
+
+            for ( BoundingBox bb : boxes )
+            {
+                int R = rand.nextInt( 256 );
+                int G = rand.nextInt( 256 );
+                int B = rand.nextInt( 256 );
+
+                int minX = bb.getMinX() - thickness;
+                int maxX = bb.getMaxX() + thickness;
+                int minY = bb.getMinY() - thickness;
+                int maxY = bb.getMaxY() + thickness;
+
+                if ( minX < 0 )
+                    minX = 0;
+
+                if ( maxX > temp.width() )
+                    maxX = temp.width();
+
+                if ( minY < 0 )
+                    minY = 0;
+
+                if ( maxY > temp.height() )
+                    maxY = temp.height();
+
+                for ( int x = minX; x <= maxX; x++ )
+                {
+
+                    if ( x <= bb.getMinX() || x >= bb.getMaxX() )
+                    {
+                        for ( int y = minY; y <= maxY; y++ )
+                        {
+                            temp.put( y, x, new double[] { B, G, R } );
+                        }
+                    }
+                    else
+                    {
+                        for ( int dy = 0; dy <= thickness; dy++ )
+                        {
+                            int y = bb.getMinY() - dy;
+
+                            if ( y < 0 )
+                                y = 0;
+
+                            temp.put( y, x, new double[] { B, G, R } );
+
+                            y = bb.getMaxY() + dy;
+
+                            if ( y > temp.height() )
+                                y = temp.height();
+
+                            temp.put( y, x, new double[] { B, G, R } );
+                        }
+                    }
+                }
+            }
+
+            writeImage( temp, "BB" );
+        }
+    }
+
+    /**
      * Write the Mat to the current directory of the image handler with the added suffix if the createImages boolean is true, otherwise nothing happens
      * 
      * @param img The image to be written to file
@@ -224,5 +314,32 @@ public class ImageHandler implements Runnable
             currentSuffix += "-" + suffix;
             Imgcodecs.imwrite( fileName + currentSuffix + extension, img );
         }
+    }
+
+    /**
+     * Checks if the 3 channel image is grayscale "black and white" by checking the absolute difference between the rgb channels in pairs per pixel. i.e. rg rb and gb. If the float value is close to 0
+     * then it is already grayscale if it is greater than 0 it is a colour pic or for example a pic of a document taken with a camera. Essentially this method finds out if the image was from a fax
+     * machine or a scanner.
+     * 
+     * @param img An rgb image to check
+     * @return True if the image is grayscale but read in as rgb image
+     */
+    private boolean isGrayscaleImage( Mat img )
+    {
+        double diff = 0.0;
+
+        for ( int x = 0; x < img.width(); x++ )
+        {
+            for ( int y = 0; y < img.height(); y++ )
+            {
+                double[] bgr = img.get( y, x );
+                double rg = Math.abs( bgr[2] - bgr[1] );
+                double rb = Math.abs( bgr[2] - bgr[0] );
+                double gb = Math.abs( bgr[1] - bgr[0] );
+                diff += rg + rb + gb;
+            }
+        }
+        System.out.println( diff / ( img.height() * img.width() ) );
+        return ( diff / ( img.height() * img.width() ) < 0.00001 );
     }
 }

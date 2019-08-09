@@ -34,3 +34,4 @@ tessdata/osd.traineddata
 tessdata/pdf.ttf
 tessdata/pdf.ttx
 /bin/
+/imgs/*
