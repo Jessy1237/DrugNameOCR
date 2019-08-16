@@ -1,17 +1,11 @@
 package com.Jessy1237.DrugNameOCR.Handlers;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import org.opencv.core.Core;
-import org.opencv.core.CvType;
-import org.opencv.core.Mat;
-import org.opencv.core.MatOfDouble;
-import org.opencv.core.MatOfPoint;
-import org.opencv.core.MatOfPoint2f;
-import org.opencv.core.Point;
-import org.opencv.core.RotatedRect;
-import org.opencv.core.Size;
+import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
@@ -96,6 +90,114 @@ public class ImageHandler implements Runnable
     }
 
     /**
+     * Finds regions of text in an image, i.e. generally paragraphs/sections. It does this by dilating the text and finding the minimum bounding box to surround a contour.
+     * 
+     * @param img The image to find the text regions in
+     * @return a list of bounding boxes for each contour found in the image
+     */
+    public List<BoundingBox> findBindingBoxes( Mat img )
+    {
+        ArrayList<BoundingBox> boxes = new ArrayList<BoundingBox>();
+        ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();
+
+        Mat temp = new Mat();
+        Mat hierarchy = new Mat();
+
+        Core.bitwise_not( img, temp ); //Img needs to have text as white to find the contours.
+
+        Imgproc.dilate( temp, temp, Imgproc.getStructuringElement( Imgproc.MORPH_CROSS, new Size( 3, 3 ) ), new Point( 1, 1 ), 15 );
+
+        writeImage( temp, "D" );
+
+        Imgproc.findContours( temp, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE );
+
+        int i = 0;
+        for ( Mat contour : contours ) //convert the contours in surrounding bounding boxes
+        {
+            Rect rect = Imgproc.boundingRect( contour );
+            boxes.add( new BoundingBox( rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, "" + i ) );
+            i++;
+        }
+
+        return boxes;
+    }
+
+    /**
+     * Creates an image with overlaying bounding boxes as defined in the list. The created image is written to the image directory but is not set to the current image of the handler. The colour of the
+     * bounding boxes is pseudo random using the java random class, however the seed is set to the current image path, so if the method is used again on the same image handler the same coloured boxes
+     * are generated. <b>NOTE:</b> This method does nothing if the image handler has not previously run before.
+     * 
+     * @param boxes The list of Bounding Boxes to draw on the image
+     */
+    public void drawBoundingBoxes( Collection<BoundingBox> boxes, int thickness )
+    {
+        if ( hasRun() )
+        {
+            Mat temp = new Mat();
+            Imgproc.cvtColor( current, temp, Imgproc.COLOR_GRAY2RGB );
+            Random rand = new Random();
+            rand.setSeed( getCurrentImagePath().hashCode() );
+
+            for ( BoundingBox bb : boxes )
+            {
+                int R = rand.nextInt( 256 );
+                int G = rand.nextInt( 256 );
+                int B = rand.nextInt( 256 );
+
+                int minX = bb.getMinX() - thickness;
+                int maxX = bb.getMaxX() + thickness;
+                int minY = bb.getMinY() - thickness;
+                int maxY = bb.getMaxY() + thickness;
+
+                if ( minX < 0 )
+                    minX = 0;
+
+                if ( maxX > temp.width() )
+                    maxX = temp.width();
+
+                if ( minY < 0 )
+                    minY = 0;
+
+                if ( maxY > temp.height() )
+                    maxY = temp.height();
+
+                for ( int x = minX; x <= maxX; x++ )
+                {
+
+                    if ( x <= bb.getMinX() || x >= bb.getMaxX() )
+                    {
+                        for ( int y = minY; y <= maxY; y++ )
+                        {
+                            temp.put( y, x, new double[] { B, G, R } );
+                        }
+                    }
+                    else
+                    {
+                        for ( int dy = 0; dy <= thickness; dy++ )
+                        {
+                            int y = bb.getMinY() - dy;
+
+                            if ( y < 0 )
+                                y = 0;
+
+                            temp.put( y, x, new double[] { B, G, R } );
+
+                            y = bb.getMaxY() + dy;
+
+                            if ( y > temp.height() )
+                                y = temp.height();
+
+                            temp.put( y, x, new double[] { B, G, R } );
+                        }
+                    }
+                }
+            }
+
+            writeImage( temp, "BB" );
+        }
+    }
+
+    /**
      * Prepares the given image by applying a pre-process for OCR. It will write each effect applied to the image to file if the createImages boolean of the image handler is true.
      * 
      * @param img The image to pre-process
@@ -127,7 +229,9 @@ public class ImageHandler implements Runnable
 
             Core.meanStdDev( temp, mean, stddev ); //gets the parameters of the greyscaled image, essentially the mean and std of the histogram as we only have one channel now.
 
-            if ( stddev.toList().get( 0 ) < 30 ) //TODO: 30 seems to be a good value for now but future work is to investigate this value further. Max value is 255 so we're checking that the histrogram is quite spread hence there is good contrasting so Hist. Eq. is not required.
+            //System.out.println( "stddev: " + stddev.toList().get( 0 ) );
+
+            if ( stddev.toList().get( 0 ) < 27 ) //TODO: 27 seems to be a good value for now but future work is to investigate this value further. Max value is 255 so we're checking that the histrogram is quite spread hence there is good contrasting so Hist. Eq. is not required.
             {
                 //Correct the contrast with histogram equalisation
                 Imgproc.equalizeHist( temp, temp );
@@ -227,81 +331,6 @@ public class ImageHandler implements Runnable
     }
 
     /**
-     * Creates an image with overlaying bounding boxes as defined in the list. The created image is written to the image directory but is not set to the current image of the handler. The colour of the
-     * bounding boxes is pseudo random using the java random class, however the seed is set to the current image path, so if the method is used again on the same image handler the same coloured boxes
-     * are generated. <b>NOTE:</b> This method does nothing if the image handler has not previously run before.
-     * 
-     * @param boxes The list of Bounding Boxes to draw on the image
-     */
-    public void drawBoundingBoxes( List<BoundingBox> boxes, int thickness )
-    {
-        if ( hasRun() )
-        {
-            Mat temp = new Mat();
-            Imgproc.cvtColor( current, temp, Imgproc.COLOR_GRAY2RGB );
-            Random rand = new Random();
-            rand.setSeed( getCurrentImagePath().hashCode() );
-
-            for ( BoundingBox bb : boxes )
-            {
-                int R = rand.nextInt( 256 );
-                int G = rand.nextInt( 256 );
-                int B = rand.nextInt( 256 );
-
-                int minX = bb.getMinX() - thickness;
-                int maxX = bb.getMaxX() + thickness;
-                int minY = bb.getMinY() - thickness;
-                int maxY = bb.getMaxY() + thickness;
-
-                if ( minX < 0 )
-                    minX = 0;
-
-                if ( maxX > temp.width() )
-                    maxX = temp.width();
-
-                if ( minY < 0 )
-                    minY = 0;
-
-                if ( maxY > temp.height() )
-                    maxY = temp.height();
-
-                for ( int x = minX; x <= maxX; x++ )
-                {
-
-                    if ( x <= bb.getMinX() || x >= bb.getMaxX() )
-                    {
-                        for ( int y = minY; y <= maxY; y++ )
-                        {
-                            temp.put( y, x, new double[] { B, G, R } );
-                        }
-                    }
-                    else
-                    {
-                        for ( int dy = 0; dy <= thickness; dy++ )
-                        {
-                            int y = bb.getMinY() - dy;
-
-                            if ( y < 0 )
-                                y = 0;
-
-                            temp.put( y, x, new double[] { B, G, R } );
-
-                            y = bb.getMaxY() + dy;
-
-                            if ( y > temp.height() )
-                                y = temp.height();
-
-                            temp.put( y, x, new double[] { B, G, R } );
-                        }
-                    }
-                }
-            }
-
-            writeImage( temp, "BB" );
-        }
-    }
-
-    /**
      * Write the Mat to the current directory of the image handler with the added suffix if the createImages boolean is true, otherwise nothing happens
      * 
      * @param img The image to be written to file
@@ -339,7 +368,9 @@ public class ImageHandler implements Runnable
                 diff += rg + rb + gb;
             }
         }
-        System.out.println( diff / ( img.height() * img.width() ) );
+
+        //System.out.println( "Greyscale: " + diff / ( img.height() * img.width() ) );
+
         return ( diff / ( img.height() * img.width() ) < 0.00001 );
     }
 }

@@ -2,7 +2,11 @@ package com.Jessy1237.DrugNameOCR;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class Util
 {
@@ -55,6 +59,138 @@ public class Util
     }
 
     /**
+     * This method searches through the list of bounding boxes and merges/combined any overlapping bounding boxes into one, larger bounding box.
+     * 
+     * @param boxes The original list of bounding boxes to check for overlaps
+     * @param tolerance the +- value to check around the bounding box
+     * @return The list of combined/merged bounding boxes
+     */
+    public Set<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int tolerance )
+    {
+        LinkedHashMap<BoundingBox, BoundingBox> mapBBtoCombinedBB = new LinkedHashMap<BoundingBox, BoundingBox>();
+
+        for ( BoundingBox b1 : boxes )
+        {
+            BoundingBox combinedB1 = mapBBtoCombinedBB.get( b1 );
+
+            if ( combinedB1 == null )
+            {
+                combinedB1 = ( BoundingBox ) b1.clone();
+                mapBBtoCombinedBB.put( b1, combinedB1 );
+            }
+
+            for ( BoundingBox b2 : boxes )
+            {
+                if ( !b2.equals( b1 ) )
+                {
+                    BoundingBox combinedB2 = mapBBtoCombinedBB.get( b2 );
+
+                    if ( combinedB2 == null )
+                    {
+                        combinedB2 = b2;
+                    }
+
+                    if ( combinedB2.equals( combinedB1 ) )
+                    {
+                        continue;
+                    }
+
+                    if ( checkBBOverlap( combinedB1, combinedB2, mapBBtoCombinedBB, tolerance ) )
+                    {
+                        mapBBtoCombinedBB.put( b1, combinedB1 );
+                        mapBBtoCombinedBB.put( b2, combinedB1 );
+                    }
+                }
+            }
+        }
+
+        LinkedHashSet<BoundingBox> combinedBBs = new LinkedHashSet<BoundingBox>();
+
+        for ( BoundingBox bb : mapBBtoCombinedBB.keySet() )
+        {
+            combinedBBs.add( mapBBtoCombinedBB.get( bb ) );
+        }
+
+        return combinedBBs;
+    }
+
+    /**
+     * Checks if b2 is inside of b1 from reference to the bottom left corner of the bounding box. It then combines the two bounding boxes into the first bounding box so that the combined bounding box
+     * now covers the two overlapping bounding boxes.
+     * 
+     * @param b1 The bounding box to see if it is the bottom left most bounding box but overlaps with b2
+     * @param b2 The bounding box to see if it is within b1
+     * @param mapBBtoCombinedBB A map to keep track of which original bounding box is mapped to what new combined box
+     * @param tolerance The tolerance value to check +- of the boundary of the bounding boxes
+     * @return true if b2 was merged into b1 otherwise false.
+     */
+    private boolean checkBBOverlap( BoundingBox b1, BoundingBox b2, Map<BoundingBox, BoundingBox> mapBBtoCombinedBB, int tolerance )
+    {
+        boolean merged = false;
+        if ( b1.getMinX() - tolerance <= b2.getMinX() && b1.getMaxX() + tolerance >= b2.getMinX() )
+        {
+            if ( b1.getMinY() - tolerance <= b2.getMinY() && b1.getMaxY() + tolerance >= b2.getMinY() )
+            {
+                combineBBX( b1, b2 );
+                combineBBY( b1, b2, b1 );
+                mapBBtoCombinedBB.put( b1, b1 );
+                b1.addId( b2.getId() );
+                merged = true;
+            }
+            else if ( b2.getMinY() - tolerance <= b1.getMinY() && b2.getMaxY() + tolerance >= b1.getMinY() )
+            {
+                combineBBX( b1, b2 );
+                combineBBY( b2, b1, b1 );
+                mapBBtoCombinedBB.put( b1, b1 );
+                b1.addId( b2.getId() );
+                merged = true;
+            }
+        }
+
+        return merged;
+    }
+
+    /**
+     * Combines the two bounding box X values together into b1. The combined minX value will be the same as b1 but the maxX value will be determined as whichever is greater between the two.
+     * 
+     * @param b1 The bounding box with the smaller min x value
+     * @param b2 The bounding box with the larger min x value
+     */
+    private void combineBBX( BoundingBox b1, BoundingBox b2 )
+    {
+        b1.setMinX( b1.getMinX() );
+        if ( b1.getMaxX() >= b2.getMaxX() )
+        {
+            b1.setMaxX( b1.getMaxX() );
+        }
+        else
+        {
+            b1.setMaxX( b2.getMaxX() );
+        }
+    }
+
+    /**
+     * Combines the two bounding box Y values together into the supplied combined bounding box. The combined minY value will be the same as b1 but the maxY value will be determined as whichever is
+     * greater between the two.
+     * 
+     * @param b1 The bounding box with the smallest min y value
+     * @param b2 The bounding box with the larger min y value
+     * @param combined the bounding box to combine the y values into
+     */
+    private void combineBBY( BoundingBox b1, BoundingBox b2, BoundingBox combined )
+    {
+        combined.setMinY( b1.getMinY() );
+        if ( b1.getMaxY() >= b2.getMaxY() )
+        {
+            combined.setMaxY( b1.getMaxY() );
+        }
+        else
+        {
+            combined.setMaxY( b2.getMaxY() );
+        }
+    }
+
+    /**
      * Adds the following entry to the HashMap or if the key already exists then it adds the path to the list of paths for that key
      * 
      * @param strings The HashMap to add the entry to
@@ -77,5 +213,4 @@ public class Util
         tempList.add( tempPath );
         strings.put( tempSpecifier, tempList );
     }
-
 }

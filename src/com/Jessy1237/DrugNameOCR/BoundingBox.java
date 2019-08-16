@@ -1,6 +1,6 @@
 package com.Jessy1237.DrugNameOCR;
 
-public class BoundingBox
+public class BoundingBox implements Cloneable
 {
     private int minX;
     private int maxX;
@@ -14,6 +14,15 @@ public class BoundingBox
         minY = -1;
         maxX = -1;
         maxY = -1;
+    }
+
+    public BoundingBox( int minX, int minY, int maxX, int maxY, String id )
+    {
+        this.minX = minX;
+        this.minY = minY;
+        this.maxX = maxX;
+        this.maxY = maxY;
+        this.id = id;
     }
 
     public int getMinX()
@@ -71,9 +80,41 @@ public class BoundingBox
         return ( minX != -1 && minY != -1 && maxX != -1 && maxY != -1 );
     }
 
+    public void addId( String id )
+    {
+        this.id += "-" + id;
+    }
+
     @Override
     public String toString()
     {
         return "BoundingBox: id=\"" + id + "\" minX=" + minX + " minY=" + minY + " maxX=" + maxX + " maxY=" + maxY;
+    }
+
+    @Override
+    public boolean equals( Object obj )
+    {
+        boolean equal = false;
+
+        if ( obj != null )
+        {
+            if ( obj instanceof BoundingBox )
+            {
+                BoundingBox bb = ( BoundingBox ) obj;
+                if ( bb.getMinX() == minX && bb.getMaxX() == maxX && bb.getMinY() == minY && bb.getMaxY() == maxY && bb.getId().equalsIgnoreCase( id ) )
+                {
+                    equal = true;
+                }
+            }
+        }
+
+        return equal;
+    }
+
+    @Override
+    public Object clone()
+    {
+        BoundingBox bb = new BoundingBox( minX, minY, maxX, maxY, id );
+        return bb;
     }
 }

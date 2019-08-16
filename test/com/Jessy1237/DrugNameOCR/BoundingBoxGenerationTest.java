@@ -1,17 +1,10 @@
 package com.Jessy1237.DrugNameOCR;
 
-import java.io.StringReader;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
+import java.util.List;
 
 import org.opencv.core.Core;
-import org.xml.sax.InputSource;
 
 import com.Jessy1237.DrugNameOCR.Handlers.ImageHandler;
-import com.Jessy1237.DrugNameOCR.Handlers.OCRHandler;
-import com.Jessy1237.DrugNameOCR.Handlers.OCRHandlerFactory;
-import com.Jessy1237.DrugNameOCR.Handlers.XMLHandler;
 
 public class BoundingBoxGenerationTest
 {
@@ -21,21 +14,27 @@ public class BoundingBoxGenerationTest
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
         try
         {
+            Util util = new Util();
             ImageHandler ih = new ImageHandler( args[0], true );
             ih.run();
 
-            OCRHandler ocrh = OCRHandlerFactory.createOCRHandler( "-AT", ih );
-            ocrh.run();
+            //Uncomment this chunk and comment the rest if you want to test the tesseract hOCR segmentation method
+            //OCRHandler ocrh = OCRHandlerFactory.createOCRHandler( "-AT", ih );
+            //ocrh.run();
 
-            SAXParserFactory spf = SAXParserFactory.newInstance();
-            SAXParser sp = spf.newSAXParser();
-            XMLHandler xmlh = new XMLHandler();
-            sp.parse( new InputSource( new StringReader( ocrh.getString() ) ), xmlh );
+            //SAXParserFactory spf = SAXParserFactory.newInstance();
+            //SAXParser sp = spf.newSAXParser();
+            //XMLHandler xmlh = new XMLHandler();
+            //sp.parse( new InputSource( new StringReader( ocrh.getString() ) ), xmlh );
+            //ih.drawBoundingBoxes( xmlh.getBoxes(), 3 );
+            //System.out.println( ocrh.getString() );
+            
 
-            ih.drawBoundingBoxes( xmlh.getBoxes(), 3 );
-
-            System.out.println( ocrh.getString() );
-
+            List<BoundingBox> bbs = ih.findBindingBoxes( ih.getCurrentImage() );
+            
+            //Uncomment this next line if you want to check the combining of the overlapping bounding boxes
+            ih.drawBoundingBoxes( bbs, 2 );
+            ih.drawBoundingBoxes( util.combineOverlapBB( bbs, 5 ), 2 );
         }
         catch ( Exception e )
         {
