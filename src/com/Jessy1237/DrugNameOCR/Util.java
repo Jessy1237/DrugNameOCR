@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class Util
@@ -68,47 +67,73 @@ public class Util
     public Set<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int tolerance )
     {
         LinkedHashMap<BoundingBox, BoundingBox> mapBBtoCombinedBB = new LinkedHashMap<BoundingBox, BoundingBox>();
+        LinkedHashSet<BoundingBox> combinedBBs = new LinkedHashSet<BoundingBox>();
+        boolean stillOverlappingBB = true;
 
-        for ( BoundingBox b1 : boxes )
+        combinedBBs.addAll( boxes );
+
+        while ( stillOverlappingBB )
         {
-            BoundingBox combinedB1 = mapBBtoCombinedBB.get( b1 );
+            stillOverlappingBB = false;
 
-            if ( combinedB1 == null )
+            for ( BoundingBox b1 : combinedBBs )
             {
-                combinedB1 = ( BoundingBox ) b1.clone();
-                mapBBtoCombinedBB.put( b1, combinedB1 );
-            }
+                BoundingBox combinedB1 = mapBBtoCombinedBB.get( b1 );
 
-            for ( BoundingBox b2 : boxes )
-            {
-                if ( !b2.equals( b1 ) )
+                if ( combinedB1 == null )
                 {
-                    BoundingBox combinedB2 = mapBBtoCombinedBB.get( b2 );
-
-                    if ( combinedB2 == null )
-                    {
-                        combinedB2 = b2;
-                    }
-
-                    if ( combinedB2.equals( combinedB1 ) )
+                    combinedB1 = ( BoundingBox ) b1.clone();
+                    mapBBtoCombinedBB.put( b1, combinedB1 );
+                }
+                else
+                {
+                    if ( !combinedB1.equals( b1 ) )
                     {
                         continue;
                     }
+                }
 
-                    if ( checkBBOverlap( combinedB1, combinedB2, mapBBtoCombinedBB, tolerance ) )
+                for ( BoundingBox b2 : combinedBBs )
+                {
+                    if ( !b2.equals( b1 ) )
                     {
-                        mapBBtoCombinedBB.put( b1, combinedB1 );
-                        mapBBtoCombinedBB.put( b2, combinedB1 );
+                        BoundingBox combinedB2 = mapBBtoCombinedBB.get( b2 );
+
+                        if ( combinedB2 == null )
+                        {
+                            combinedB2 = b2;
+                        }
+                        else
+                        {
+                            if ( !b2.equals( combinedB2 ) )
+                            {
+                                continue;
+                            }
+                        }
+
+                        if ( combinedB2.equals( combinedB1 ) )
+                        {
+                            continue;
+                        }
+
+                        if ( checkBBOverlap( combinedB1, combinedB2, tolerance ) )
+                        {
+                            mapBBtoCombinedBB.put( combinedB1, combinedB1 );
+                            mapBBtoCombinedBB.put( b1, combinedB1 );
+                            mapBBtoCombinedBB.put( b2, combinedB1 );
+                            stillOverlappingBB = true;
+                        }
                     }
                 }
             }
-        }
 
-        LinkedHashSet<BoundingBox> combinedBBs = new LinkedHashSet<BoundingBox>();
+            combinedBBs.clear();
+            for ( BoundingBox bb : mapBBtoCombinedBB.keySet() )
+            {
+                combinedBBs.add( mapBBtoCombinedBB.get( bb ) );
+            }
 
-        for ( BoundingBox bb : mapBBtoCombinedBB.keySet() )
-        {
-            combinedBBs.add( mapBBtoCombinedBB.get( bb ) );
+            mapBBtoCombinedBB.clear();
         }
 
         return combinedBBs;
@@ -120,11 +145,10 @@ public class Util
      * 
      * @param b1 The bounding box to see if it is the bottom left most bounding box but overlaps with b2
      * @param b2 The bounding box to see if it is within b1
-     * @param mapBBtoCombinedBB A map to keep track of which original bounding box is mapped to what new combined box
      * @param tolerance The tolerance value to check +- of the boundary of the bounding boxes
      * @return true if b2 was merged into b1 otherwise false.
      */
-    private boolean checkBBOverlap( BoundingBox b1, BoundingBox b2, Map<BoundingBox, BoundingBox> mapBBtoCombinedBB, int tolerance )
+    private boolean checkBBOverlap( BoundingBox b1, BoundingBox b2, int tolerance )
     {
         boolean merged = false;
         if ( b1.getMinX() - tolerance <= b2.getMinX() && b1.getMaxX() + tolerance >= b2.getMinX() )
@@ -133,7 +157,6 @@ public class Util
             {
                 combineBBX( b1, b2 );
                 combineBBY( b1, b2, b1 );
-                mapBBtoCombinedBB.put( b1, b1 );
                 b1.addId( b2.getId() );
                 merged = true;
             }
@@ -141,7 +164,6 @@ public class Util
             {
                 combineBBX( b1, b2 );
                 combineBBY( b2, b1, b1 );
-                mapBBtoCombinedBB.put( b1, b1 );
                 b1.addId( b2.getId() );
                 merged = true;
             }
