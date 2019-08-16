@@ -275,7 +275,7 @@ public class ImageHandler implements Runnable
         Point[] vertices = new Point[4];
         rotatedRect.points( vertices );
 
-        if ( rotatedRect.size.width > rotatedRect.size.height )
+        if ( rotatedRect.size.width > rotatedRect.size.height && inverse.height() > inverse.width() )
         {
             rotatedRect.angle += 90.f;
         }
