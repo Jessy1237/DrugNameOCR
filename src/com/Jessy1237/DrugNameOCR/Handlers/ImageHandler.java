@@ -115,6 +115,13 @@ public class ImageHandler implements Runnable
         for ( Mat contour : contours ) //convert the contours in surrounding bounding boxes
         {
             Rect rect = Imgproc.boundingRect( contour );
+
+            //Dont include boxes that are too small or too large. less than 10% of the image or greater than 80% as these are most likely noise in the image. Also saves computation time.
+            if ( ( rect.width < img.width() * 0.1 && rect.height < img.height() * 0.1 ) || ( rect.width > img.width() * 0.8 && rect.height > img.height() * 0.8 ) )
+            {
+                continue;
+            }
+
             boxes.add( new BoundingBox( rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, "" + i ) );
             i++;
         }
@@ -164,7 +171,7 @@ public class ImageHandler implements Runnable
                 for ( int x = minX; x <= maxX; x++ )
                 {
 
-                    if ( x <= bb.getMinX() || x >= bb.getMaxX() )
+                    if ( x <= bb.getMinX() || x >= bb.getMaxX() ) //The left or right line of the BB
                     {
                         for ( int y = minY; y <= maxY; y++ )
                         {
@@ -173,7 +180,7 @@ public class ImageHandler implements Runnable
                     }
                     else
                     {
-                        for ( int dy = 0; dy <= thickness; dy++ )
+                        for ( int dy = 0; dy <= thickness; dy++ ) //The top and bottom line of the BB
                         {
                             int y = bb.getMinY() - dy;
 
@@ -231,7 +238,8 @@ public class ImageHandler implements Runnable
 
             //System.out.println( "stddev: " + stddev.toList().get( 0 ) );
 
-            if ( stddev.toList().get( 0 ) < 27 ) //TODO: 27 seems to be a good value for now but future work is to investigate this value further. Max value is 255 so we're checking that the histrogram is quite spread hence there is good contrasting so Hist. Eq. is not required.
+            //TODO: 27 seems to be a good value for now but future work is to investigate this value further. Max value is 255 so we're checking that the histogram is quite spread hence there is good contrasting so Hist. Eq. is not required.
+            if ( stddev.toList().get( 0 ) < 27 )
             {
                 //Correct the contrast with histogram equalisation
                 Imgproc.equalizeHist( temp, temp );
