@@ -20,24 +20,44 @@ public class ImageHandler implements Runnable
     private Mat current = null;
     private boolean createImages;
     private String currentSuffix;
-    private String fileName;
     private String extension;
+    private String dir;
+    private String imgName;
 
-    public ImageHandler( String imgLoc, boolean createImages ) throws IllegalArgumentException
+    public ImageHandler( String dir, String fileName, boolean createImages ) throws IllegalArgumentException
     {
-        this.original = Imgcodecs.imread( imgLoc, Imgcodecs.IMREAD_COLOR );
+        this.original = Imgcodecs.imread( dir + fileName, Imgcodecs.IMREAD_COLOR );
 
         if ( original.empty() )
         {
-            throw new IllegalArgumentException( "The following image was unable to be loaded: " + imgLoc );
+            throw new IllegalArgumentException( "The following image was unable to be loaded: " + dir + fileName );
         }
 
         this.createImages = createImages;
         this.currentSuffix = "";
+        this.dir = dir;
 
-        int periodIndex = imgLoc.lastIndexOf( '.' );
-        this.fileName = imgLoc.substring( 0, periodIndex );
-        this.extension = imgLoc.substring( periodIndex, imgLoc.length() );
+        int periodIndex = fileName.lastIndexOf( '.' );
+        this.imgName = fileName.substring( 0, periodIndex );
+        this.extension = fileName.substring( periodIndex, fileName.length() );
+    }
+
+    public ImageHandler( String fileName, boolean createImages ) throws IllegalArgumentException
+    {
+        this.original = Imgcodecs.imread( fileName, Imgcodecs.IMREAD_COLOR );
+
+        if ( original.empty() )
+        {
+            throw new IllegalArgumentException( "The following image was unable to be loaded: " + fileName );
+        }
+
+        this.createImages = createImages;
+        this.currentSuffix = "";
+        this.dir = "";
+
+        int periodIndex = fileName.lastIndexOf( '.' );
+        this.imgName = fileName.substring( 0, periodIndex );
+        this.extension = fileName.substring( periodIndex, fileName.length() );
     }
 
     /**
@@ -86,7 +106,12 @@ public class ImageHandler implements Runnable
      */
     public String getCurrentImagePath()
     {
-        return fileName + currentSuffix + extension;
+        return dir + imgName + currentSuffix + extension;
+    }
+
+    public String getImageName()
+    {
+        return imgName;
     }
 
     /**
@@ -349,7 +374,7 @@ public class ImageHandler implements Runnable
         if ( createImages )
         {
             currentSuffix += "-" + suffix;
-            Imgcodecs.imwrite( fileName + currentSuffix + extension, img );
+            Imgcodecs.imwrite( dir + imgName + currentSuffix + extension, img );
         }
     }
 

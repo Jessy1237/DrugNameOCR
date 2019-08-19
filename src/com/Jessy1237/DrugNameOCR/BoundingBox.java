@@ -1,5 +1,7 @@
 package com.Jessy1237.DrugNameOCR;
 
+import java.util.StringTokenizer;
+
 public class BoundingBox implements Cloneable
 {
     private int minX;
@@ -14,6 +16,7 @@ public class BoundingBox implements Cloneable
         minY = -1;
         maxX = -1;
         maxY = -1;
+        id = " ";
     }
 
     public BoundingBox( int minX, int minY, int maxX, int maxY, String id )
@@ -23,6 +26,73 @@ public class BoundingBox implements Cloneable
         this.maxX = maxX;
         this.maxY = maxY;
         this.id = id;
+    }
+
+    public BoundingBox( String bb )
+    {
+        StringTokenizer st = new StringTokenizer( bb );
+
+        minX = -2;
+        minY = -2;
+        maxX = -2;
+        maxY = -2;
+        id = "";
+
+        while ( st.hasMoreTokens() )
+        {
+            String token = st.nextToken();
+
+            if ( token.contains( "minX=" ) )
+            {
+                String[] split = token.split( "=" );
+                if ( split.length == 2 )
+                {
+                    minX = Integer.parseInt( split[1] );
+                }
+            }
+
+            if ( token.contains( "minY=" ) )
+            {
+                String[] split = token.split( "=" );
+                if ( split.length == 2 )
+                {
+                    minY = Integer.parseInt( split[1] );
+                }
+            }
+
+            if ( token.contains( "maxX=" ) )
+            {
+                String[] split = token.split( "=" );
+                if ( split.length == 2 )
+                {
+                    maxX = Integer.parseInt( split[1] );
+                }
+            }
+
+            if ( token.contains( "maxY=" ) )
+            {
+                String[] split = token.split( "=" );
+                if ( split.length == 2 )
+                {
+                    maxY = Integer.parseInt( split[1] );
+                }
+            }
+        }
+
+        st = new StringTokenizer( bb, "\"" );
+        while ( st.hasMoreTokens() )
+        {
+            String token = st.nextToken();
+            if ( token.equalsIgnoreCase( "BoundingBox: id=" ) )
+            {
+                id = st.nextToken();
+            }
+        }
+
+        if ( minX == -2 || maxX == -2 || minY == -2 | maxY == -2 || id.isEmpty() )
+        {
+            throw new IllegalArgumentException( "Unable to parse the input string into a bounding box" );
+        }
     }
 
     public int getMinX()
