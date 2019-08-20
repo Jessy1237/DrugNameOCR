@@ -16,7 +16,7 @@ public class BoundingBox implements Cloneable
         minY = -1;
         maxX = -1;
         maxY = -1;
-        id = " ";
+        id = "blank";
     }
 
     public BoundingBox( int minX, int minY, int maxX, int maxY, String id )
@@ -30,62 +30,44 @@ public class BoundingBox implements Cloneable
 
     public BoundingBox( String bb )
     {
-        StringTokenizer st = new StringTokenizer( bb );
-
         minX = -2;
         minY = -2;
         maxX = -2;
         maxY = -2;
         id = "";
 
+        System.out.println( bb );
+
+        StringTokenizer st = new StringTokenizer( bb, "'" );
         while ( st.hasMoreTokens() )
         {
-            String token = st.nextToken();
+            String token = st.nextToken().trim();
+            token = token.replace( "BoundingBox:", "" );
+            token = token.trim();
 
-            if ( token.contains( "minX=" ) )
+            if ( token.equalsIgnoreCase( "id=" ) )
             {
-                String[] split = token.split( "=" );
-                if ( split.length == 2 )
-                {
-                    minX = Integer.parseInt( split[1] );
-                }
+                id = st.nextToken().trim();
             }
 
-            if ( token.contains( "minY=" ) )
+            if ( token.equalsIgnoreCase( "minX=" ) )
             {
-                String[] split = token.split( "=" );
-                if ( split.length == 2 )
-                {
-                    minY = Integer.parseInt( split[1] );
-                }
+                minX = Integer.parseInt( st.nextToken().trim() );
             }
 
-            if ( token.contains( "maxX=" ) )
+            if ( token.equalsIgnoreCase( "minY=" ) )
             {
-                String[] split = token.split( "=" );
-                if ( split.length == 2 )
-                {
-                    maxX = Integer.parseInt( split[1] );
-                }
+                minY = Integer.parseInt( st.nextToken().trim() );
             }
 
-            if ( token.contains( "maxY=" ) )
+            if ( token.equalsIgnoreCase( "maxX=" ) )
             {
-                String[] split = token.split( "=" );
-                if ( split.length == 2 )
-                {
-                    maxY = Integer.parseInt( split[1] );
-                }
+                maxX = Integer.parseInt( st.nextToken().trim() );
             }
-        }
 
-        st = new StringTokenizer( bb, "\"" );
-        while ( st.hasMoreTokens() )
-        {
-            String token = st.nextToken();
-            if ( token.equalsIgnoreCase( "BoundingBox: id=" ) )
+            if ( token.equalsIgnoreCase( "maxY=" ) )
             {
-                id = st.nextToken();
+                maxY = Integer.parseInt( st.nextToken().trim() );
             }
         }
 
@@ -158,7 +140,7 @@ public class BoundingBox implements Cloneable
     @Override
     public String toString()
     {
-        return "BoundingBox: id=\"" + id + "\" minX=" + minX + " minY=" + minY + " maxX=" + maxX + " maxY=" + maxY;
+        return "BoundingBox: id='" + id + "' minX='" + minX + "' minY='" + minY + "' maxX='" + maxX + "' maxY='" + maxY + "'";
     }
 
     @Override
