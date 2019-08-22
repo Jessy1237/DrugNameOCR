@@ -36,8 +36,6 @@ public class BoundingBox implements Cloneable
         maxY = -2;
         id = "";
 
-        System.out.println( bb );
-
         StringTokenizer st = new StringTokenizer( bb, "'" );
         while ( st.hasMoreTokens() )
         {
@@ -135,6 +133,73 @@ public class BoundingBox implements Cloneable
     public void addId( String id )
     {
         this.id += "-" + id;
+    }
+
+    /**
+     * Compares the similarity to the supplied BB. i.e. finds the percentage overlap.
+     * 
+     * @param bb The bounding box to compare to
+     * @return The percentage of overlap
+     */
+    public double compareSimilarity( BoundingBox bb )
+    {
+        System.out.println( id + " " + bb.getId() + " " + ( maxX - minX ) + " " + ( maxY - minY ) );
+        int area = ( maxX - minX ) * ( maxY - minY );
+        int overlapArea = 0;
+        int overlapWidth = 0;
+        int overlapHeight = 0;
+
+        //Find the width of the overlapping area
+        if ( bb.getMinX() <= minX && bb.getMaxX() > minX )
+        {
+            if ( bb.getMaxX() <= maxX )
+            {
+                overlapWidth = bb.getMaxX() - minX;
+            }
+            else
+            {
+                overlapWidth = maxX - minX;
+            }
+        }
+        else if ( minX <= bb.getMinX() && maxX > bb.getMinX() )
+        {
+            if ( bb.getMaxX() <= maxX )
+            {
+                overlapWidth = bb.getMaxX() - bb.getMinX();
+            }
+            else
+            {
+                overlapWidth = maxX - bb.getMinX();
+            }
+        }
+
+        //Find the height of the overlapping area
+        if ( bb.getMinY() <= minY && bb.getMaxY() > minY )
+        {
+            if ( bb.getMaxY() <= maxY )
+            {
+                overlapHeight = bb.getMaxY() - minY;
+            }
+            else
+            {
+                overlapHeight = maxY - minY;
+            }
+        }
+        else if ( minY <= bb.getMinY() && maxY > bb.getMinY() )
+        {
+            if ( bb.getMaxY() <= maxY )
+            {
+                overlapHeight = bb.getMaxY() - bb.getMinY();
+            }
+            else
+            {
+                overlapHeight = maxY - bb.getMinY();
+            }
+        }
+
+        overlapArea = overlapWidth * overlapHeight;
+
+        return ( double ) ( overlapArea / area );
     }
 
     @Override
