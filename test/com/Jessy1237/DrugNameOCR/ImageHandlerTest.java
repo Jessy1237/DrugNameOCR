@@ -12,8 +12,15 @@ public class ImageHandlerTest
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
         try
         {
-            ImageHandler ih = new ImageHandler( args[0], true );
-            ih.run();
+            if ( args.length != 1 )
+            {
+                System.out.println( "USAGE: <image>" );
+            }
+            else
+            {
+                ImageHandler ih = new ImageHandler( args[0], true );
+                ih.run();
+            }
         }
         catch ( Exception e )
         {

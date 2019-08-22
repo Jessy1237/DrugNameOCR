@@ -10,19 +10,26 @@ public class ModelManagerTest
 
         try
         {
-            ArrayList<String> names = new ArrayList<String>();
-            for ( int i = 1; i < args.length; i++ )
+            if ( args.length < 2 )
             {
-                names.add( args[i] );
-                System.out.println( args[i] );
+                System.out.println( "USAGE: <model directory> <model 1> <model 2> ..." );
             }
-            ModelManager mm = new ModelManager( args[0], names );
-
-            mm.readModels();
-
-            for ( Model model : mm.getModels() )
+            else
             {
-                System.out.println( model.toJSONString() );
+                ArrayList<String> names = new ArrayList<String>();
+                for ( int i = 1; i < args.length; i++ )
+                {
+                    names.add( args[i] );
+                    System.out.println( args[i] );
+                }
+                ModelManager mm = new ModelManager( args[0], names );
+
+                mm.readModels();
+
+                for ( Model model : mm.getModels() )
+                {
+                    System.out.println( model.toJSONString() );
+                }
             }
         }
         catch ( Exception e )
