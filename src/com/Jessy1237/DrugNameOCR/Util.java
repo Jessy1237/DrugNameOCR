@@ -61,10 +61,11 @@ public class Util
      * This method searches through the list of bounding boxes and merges/combined any overlapping bounding boxes into one, larger bounding box.
      * 
      * @param boxes The original list of bounding boxes to check for overlaps
-     * @param tolerance the +- value to check around the bounding box
+     * @param toleranceX the +- value to add to the X values
+     * @param toleranceY the +- value to add to the Y values
      * @return The list of combined/merged bounding boxes
      */
-    public Set<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int tolerance )
+    public Set<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int toleranceX, int toleranceY )
     {
         LinkedHashMap<BoundingBox, BoundingBox> mapBBtoCombinedBB = new LinkedHashMap<BoundingBox, BoundingBox>();
         LinkedHashSet<BoundingBox> combinedBBs = new LinkedHashSet<BoundingBox>();
@@ -116,7 +117,7 @@ public class Util
                             continue;
                         }
 
-                        if ( checkBBOverlap( combinedB1, combinedB2, tolerance ) )
+                        if ( checkBBOverlap( combinedB1, combinedB2, toleranceX, toleranceY ) )
                         {
                             mapBBtoCombinedBB.put( combinedB1, combinedB1 );
                             mapBBtoCombinedBB.put( b1, combinedB1 );
@@ -148,19 +149,19 @@ public class Util
      * @param tolerance The tolerance value to check +- of the boundary of the bounding boxes
      * @return true if b2 was merged into b1 otherwise false.
      */
-    private boolean checkBBOverlap( BoundingBox b1, BoundingBox b2, int tolerance )
+    private boolean checkBBOverlap( BoundingBox b1, BoundingBox b2, int toleranceX, int toleranceY )
     {
         boolean merged = false;
-        if ( b1.getMinX() - tolerance <= b2.getMinX() && b1.getMaxX() + tolerance >= b2.getMinX() )
+        if ( b1.getMinX() - toleranceX <= b2.getMinX() && b1.getMaxX() + toleranceX >= b2.getMinX() )
         {
-            if ( b1.getMinY() - tolerance <= b2.getMinY() && b1.getMaxY() + tolerance >= b2.getMinY() )
+            if ( b1.getMinY() - toleranceY <= b2.getMinY() && b1.getMaxY() + toleranceY >= b2.getMinY() )
             {
                 combineBBX( b1, b2 );
                 combineBBY( b1, b2, b1 );
                 b1.addId( b2.getId() );
                 merged = true;
             }
-            else if ( b2.getMinY() - tolerance <= b1.getMinY() && b2.getMaxY() + tolerance >= b1.getMinY() )
+            else if ( b2.getMinY() - toleranceY <= b1.getMinY() && b2.getMaxY() + toleranceY >= b1.getMinY() )
             {
                 combineBBX( b1, b2 );
                 combineBBY( b2, b1, b1 );
