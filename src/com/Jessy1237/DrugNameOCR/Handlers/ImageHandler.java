@@ -80,6 +80,10 @@ public class ImageHandler implements Runnable
 
         temp = morphTransform( temp );
 
+        temp = cropImage( temp );
+
+        writeImage( temp, "C" );
+
         current = temp;
 
     }
@@ -150,6 +154,8 @@ public class ImageHandler implements Runnable
             boxes.add( new BoundingBox( rect.x, rect.y, rect.x + rect.width, rect.y + rect.height, "" + i ) );
             i++;
         }
+
+        //boxes.sort( new BoundingBox() );
 
         return boxes;
     }
@@ -314,6 +320,27 @@ public class ImageHandler implements Runnable
         }
 
         return rotatedRect.angle;
+    }
+
+    private Mat cropImage( Mat img )
+    {
+        Mat inverse = new Mat();
+        Core.bitwise_not( img, inverse );
+
+        Mat whiteLoc = Mat.zeros( inverse.size(), inverse.type() );
+        Core.findNonZero( inverse, whiteLoc );
+
+        //Create an empty Mat and pass it to the function
+        MatOfPoint matOfPoint = new MatOfPoint( whiteLoc );
+
+        //Translate MatOfPoint to MatOfPoint2f in order to use at a next step
+        MatOfPoint2f mat2f = new MatOfPoint2f();
+        matOfPoint.convertTo( mat2f, CvType.CV_32FC2 );
+
+        //Get rotated rect of white pixels
+        RotatedRect rect = Imgproc.minAreaRect( mat2f );
+
+        return img.submat( rect.boundingRect() );
     }
 
     /**

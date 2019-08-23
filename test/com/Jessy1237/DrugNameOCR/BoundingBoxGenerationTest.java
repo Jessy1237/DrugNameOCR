@@ -2,7 +2,6 @@ package com.Jessy1237.DrugNameOCR;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import org.opencv.core.Core;
 
@@ -42,9 +41,7 @@ public class BoundingBoxGenerationTest
                 //Uncomment this next line if you want to check the combining of the overlapping bounding boxes
                 ih.drawBoundingBoxes( bbs, 2 );
 
-                System.out.println( ( int ) ( ih.getCurrentImage().width() * 0.025 ) );
-
-                Set<BoundingBox> combined = util.combineOverlapBB( bbs, ( int ) ( ih.getCurrentImage().width() * 0.025 ), ( int ) ( ih.getCurrentImage().height() * 0.005 ) ); //have the combination tolerance as 2% of the image width and 0.005% for the image height
+                List<BoundingBox> combined = util.combineOverlapBB( bbs, ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.005 ) ); //have the combination tolerance as 2% of the image width and 0.005% for the image height
                 ih.drawBoundingBoxes( combined, 2 );
 
                 ModelManager mm = new ModelManager( "models\\", null );
