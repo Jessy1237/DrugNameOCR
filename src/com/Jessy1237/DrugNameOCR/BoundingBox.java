@@ -1,8 +1,9 @@
 package com.Jessy1237.DrugNameOCR;
 
+import java.util.Comparator;
 import java.util.StringTokenizer;
 
-public class BoundingBox implements Cloneable
+public class BoundingBox implements Cloneable, Comparator<BoundingBox>
 {
     private int minX;
     private int maxX;
@@ -136,14 +137,13 @@ public class BoundingBox implements Cloneable
     }
 
     /**
-     * Compares the similarity to the supplied BB. i.e. finds the percentage overlap.
+     * Finds the overlap area of this bounding box with the compared bounding box.
      * 
      * @param bb The bounding box to compare to
-     * @return The percentage of overlap
+     * @return an integer area with index 0 containing the overlap area while index 1 contains the area of this bounding box
      */
-    public double compareSimilarity( BoundingBox bb )
+    public int[] findOverlapArea( BoundingBox bb )
     {
-        System.out.println( id + " " + bb.getId() + " " + ( maxX - minX ) + " " + ( maxY - minY ) );
         int area = ( maxX - minX ) * ( maxY - minY );
         int overlapArea = 0;
         int overlapWidth = 0;
@@ -198,8 +198,8 @@ public class BoundingBox implements Cloneable
         }
 
         overlapArea = overlapWidth * overlapHeight;
-
-        return ( double ) ( overlapArea / area );
+        int[] result = { overlapArea, area };
+        return result;
     }
 
     @Override
@@ -233,5 +233,13 @@ public class BoundingBox implements Cloneable
     {
         BoundingBox bb = new BoundingBox( minX, minY, maxX, maxY, id );
         return bb;
+    }
+
+    @Override
+    public int compare( BoundingBox b1, BoundingBox b2 )
+    {
+        //double distanceDifference = ( Math.sqrt( b1.getMinX() * b1.getMinX() + b1.getMinY() + b1.getMinY() ) - Math.sqrt( b2.getMinX() * b2.getMinX() + b2.getMinY() + b2.getMinY() ) );
+        //return ( int ) distanceDifference;
+        return b1.getMinY() - b2.getMinY();
     }
 }

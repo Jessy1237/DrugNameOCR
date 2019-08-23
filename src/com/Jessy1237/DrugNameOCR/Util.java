@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 public class Util
 {
@@ -65,7 +64,7 @@ public class Util
      * @param toleranceY the +- value to add to the Y values
      * @return The list of combined/merged bounding boxes
      */
-    public Set<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int toleranceX, int toleranceY )
+    public List<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int toleranceX, int toleranceY )
     {
         LinkedHashMap<BoundingBox, BoundingBox> mapBBtoCombinedBB = new LinkedHashMap<BoundingBox, BoundingBox>();
         LinkedHashSet<BoundingBox> combinedBBs = new LinkedHashSet<BoundingBox>();
@@ -137,7 +136,10 @@ public class Util
             mapBBtoCombinedBB.clear();
         }
 
-        return combinedBBs;
+        ArrayList<BoundingBox> combinedList = new ArrayList<BoundingBox>( combinedBBs );
+        //combinedList.sort( new BoundingBox() );
+
+        return combinedList;
     }
 
     /**

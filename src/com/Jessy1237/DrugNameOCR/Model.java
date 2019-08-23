@@ -208,6 +208,96 @@ public class Model
     //        return maxSim;
     //    }
 
+    public double calculateSimilarity( Collection<BoundingBox> bbs, int imgW, int imgH )
+    {
+        double sim = 0.0f;
+        List<BoundingBox> scaledBBs = scaleBBs( bbs, imgW, imgH );
+        int length = boxes.size();
+
+        if ( isValid() && !scaledBBs.isEmpty() )
+        {
+            if ( scaledBBs.size() == boxes.size() )
+            {
+                int totalOverlapArea = 0;
+                int totalArea = 0;
+                for ( int i = 0; i < length; i++ )
+                {
+                    int[] result = boxes.get( i ).findOverlapArea( scaledBBs.get( i ) );
+                    totalOverlapArea += result[0];
+                    totalArea += result[1];
+                }
+                sim = ( double ) totalOverlapArea / ( double ) totalArea;
+            }
+            else if ( scaledBBs.size() > boxes.size() )
+            {
+                for ( int skip = 0; skip < scaledBBs.size(); skip++ )
+                {
+                    double tempSim = 0.0f;
+                    int totalOverlapArea = 0;
+                    int totalArea = 0;
+
+                    for ( int i = 0; i < length; i++ )
+                    {
+                        int[] result;
+                        if ( i < skip )
+                        {
+                            result = boxes.get( i ).findOverlapArea( scaledBBs.get( i ) );
+                        }
+                        else
+                        {
+                            result = boxes.get( i ).findOverlapArea( scaledBBs.get( i + 1 ) );
+                        }
+
+                        totalOverlapArea += result[0];
+                        totalArea += result[1];
+                    }
+
+                    tempSim = ( double ) totalOverlapArea / ( double ) totalArea;
+
+                    if ( tempSim > sim )
+                    {
+                        sim = tempSim;
+                    }
+                }
+            }
+            else if ( boxes.size() > scaledBBs.size() )
+            {
+                length = scaledBBs.size();
+                for ( int skip = 0; skip < boxes.size(); skip++ )
+                {
+                    double tempSim = 0.0f;
+                    int totalOverlapArea = 0;
+                    int totalArea = 0;
+
+                    for ( int i = 0; i < length; i++ )
+                    {
+                        int[] result;
+                        if ( i < skip )
+                        {
+                            result = boxes.get( i ).findOverlapArea( scaledBBs.get( i ) );
+                        }
+                        else
+                        {
+                            result = boxes.get( i + 1 ).findOverlapArea( scaledBBs.get( i ) );
+                        }
+
+                        totalOverlapArea += result[0];
+                        totalArea += result[1];
+                    }
+
+                    tempSim = ( double ) totalOverlapArea / ( double ) totalArea;
+
+                    if ( tempSim > sim )
+                    {
+                        sim = tempSim;
+                    }
+                }
+            }
+        }
+
+        return sim;
+    }
+
     /**
      * Scales the given collection of bounding box dimensions to fit the model dimensions.
      * 
@@ -242,26 +332,26 @@ public class Model
                 * ( double ) width ) ), ( int ) ( ( double ) ( bb.getMaxY() / ( double ) imgH * ( double ) height ) ), bb.getId() );
     }
 
-    private class Result
-    {
-
-        private BoundingBox bb;
-        private double sim;
-
-        public Result( BoundingBox bb, double sim )
-        {
-            this.bb = bb;
-            this.sim = sim;
-        }
-
-        public BoundingBox getBB()
-        {
-            return bb;
-        }
-
-        public double getSim()
-        {
-            return sim;
-        }
-    }
+    //    private class Result
+    //    {
+    //
+    //        private BoundingBox bb;
+    //        private double sim;
+    //
+    //        public Result( BoundingBox bb, double sim )
+    //        {
+    //            this.bb = bb;
+    //            this.sim = sim;
+    //        }
+    //
+    //        public BoundingBox getBB()
+    //        {
+    //            return bb;
+    //        }
+    //
+    //        public double getSim()
+    //        {
+    //            return sim;
+    //        }
+    //    }
 }
