@@ -134,7 +134,19 @@ public class ImageHandler implements Runnable
 
         Core.bitwise_not( img, temp ); //Img needs to have text as white to find the contours.
 
-        Imgproc.dilate( temp, temp, Imgproc.getStructuringElement( Imgproc.MORPH_CROSS, new Size( 3, 3 ) ), new Point( 1, 1 ), 15 );
+        int iterations = 10 * ( int ) Math.sqrt( ( ( double ) temp.width() * ( double ) temp.height() / 1000000f ) ); //Model images were approx 2000000 pixels^2 and we wanted roughly 15 iterations and test images were 8000000 and we wanted roughly 20
+
+        //Now we limit the iterations to be between 10 and 20
+        if ( iterations < 10 )
+        {
+            iterations = 10;
+        }
+        else if ( iterations > 20 )
+        {
+            iterations = 20;
+        }
+
+        Imgproc.dilate( temp, temp, Imgproc.getStructuringElement( Imgproc.MORPH_CROSS, new Size( 3, 3 ) ), new Point( 1, 1 ), iterations );
 
         writeImage( temp, "D" );
 
@@ -178,6 +190,7 @@ public class ImageHandler implements Runnable
 
             for ( BoundingBox bb : boxes )
             {
+                //Get the random colour values for each channel
                 int R = rand.nextInt( 256 );
                 int G = rand.nextInt( 256 );
                 int B = rand.nextInt( 256 );
@@ -187,6 +200,7 @@ public class ImageHandler implements Runnable
                 int minY = bb.getMinY() - thickness;
                 int maxY = bb.getMaxY() + thickness;
 
+                //make sure our values are within the image dimensions
                 if ( minX < 0 )
                     minX = 0;
 
