@@ -1,11 +1,13 @@
 package com.Jessy1237.DrugNameOCR;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -18,19 +20,27 @@ public class ModelManager
 {
 
     private String modelDirectory;
-    private List<String> modelNames;
+    private List<File> modelFiles;
     private List<Model> models;
 
-    public ModelManager( String modelDirectory, List<String> modelNames )
+    public ModelManager( String modelDirectory )
     {
         this.modelDirectory = modelDirectory;
-        this.modelNames = modelNames;
-
-        if ( modelNames == null )
-            modelNames = new ArrayList<String>();
 
         if ( !modelDirectory.endsWith( File.separator ) )
             modelDirectory += File.separator;
+
+        File[] files = new File( modelDirectory ).listFiles( new FileFilter() {
+
+            @Override
+            public boolean accept( File pathname )
+            {
+                return pathname.getName().toLowerCase().endsWith( "model" );
+            }
+
+        } );
+
+        modelFiles = new ArrayList<File>( Arrays.asList( files ) );
 
         models = new ArrayList<Model>();
     }
@@ -61,9 +71,9 @@ public class ModelManager
     {
         init();
 
-        for ( String name : modelNames )
+        for ( File f : modelFiles )
         {
-            Model model = readModelFile( new File( modelDirectory, name + ".model" ) );
+            Model model = readModelFile( f );
 
             if ( model != null )
             {

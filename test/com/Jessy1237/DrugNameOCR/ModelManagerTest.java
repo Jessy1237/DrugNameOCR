@@ -1,7 +1,5 @@
 package com.Jessy1237.DrugNameOCR;
 
-import java.util.ArrayList;
-
 public class ModelManagerTest
 {
 
@@ -10,20 +8,13 @@ public class ModelManagerTest
 
         try
         {
-            if ( args.length < 2 )
+            if ( args.length != 1 )
             {
-                System.out.println( "USAGE: <model directory> <model 1> <model 2> ..." );
+                System.out.println( "USAGE: <model directory>" );
             }
             else
             {
-                ArrayList<String> names = new ArrayList<String>();
-                for ( int i = 1; i < args.length; i++ )
-                {
-                    names.add( args[i] );
-                    System.out.println( args[i] );
-                }
-                ModelManager mm = new ModelManager( args[0], names );
-
+                ModelManager mm = new ModelManager( args[0] );
                 mm.readModels();
 
                 for ( Model model : mm.getModels() )
