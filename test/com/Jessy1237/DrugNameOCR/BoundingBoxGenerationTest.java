@@ -44,7 +44,7 @@ public class BoundingBoxGenerationTest
                 List<BoundingBox> combined = util.combineOverlapBB( bbs, ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) );//have the combination tolerance as 1.5% of the image width and 1.0% for the image height
                 ih.drawBoundingBoxes( combined, 2 );
 
-                ModelManager mm = new ModelManager( "models\\", null );
+                ModelManager mm = new ModelManager( "models" );
                 mm.writeModelFile( new Model( ih.getImageName(), new ArrayList<BoundingBox>( combined ), new BoundingBox(), ih.getCurrentImage().width(), ih.getCurrentImage().height() ) );
             }
         }
