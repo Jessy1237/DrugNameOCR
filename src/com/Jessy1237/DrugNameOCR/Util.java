@@ -143,6 +143,61 @@ public class Util
     }
 
     /**
+     * Converts the array of states into a string
+     * 
+     * @param states the states from the hmm
+     * @return The word representing the states
+     */
+    public String convertStatesToString( int[] states )
+    {
+        String word = "";
+        for ( int i = 0; i < states.length; i++ )
+        {
+            if ( states[i] < 26 ) //The lowercase letters in ASCII
+            {
+                word += ( char ) ( states[i] + 97 );
+            }
+            else if ( states[i] >= 26 && states[i] < 36 ) //The numbers in ASCII
+            {
+                word += ( char ) ( states[i] - 26 + 48 );
+            }
+            else //Hyphen in ASCII
+            {
+                word += '-';
+            }
+        }
+
+        return word;
+    }
+
+    public int[] convertStringToStates( String word )
+    {
+        int[] states = new int[word.length()];
+
+        word = word.toLowerCase();
+
+        for ( int i = 0; i < word.length(); i++ )
+        {
+            char c = word.charAt( i );
+
+            if ( c == '-' ) //hyphen
+            {
+                states[i] = 36;
+            }
+            else if ( c >= '0' && c <= '9' ) //0-9
+            {
+                states[i] = 26 + c - 48;
+            }
+            else //a-z
+            {
+                states[i] = c - 97;
+            }
+        }
+
+        return states;
+    }
+
+    /**
      * Checks if b2 is inside of b1 from reference to the bottom left corner of the bounding box. It then combines the two bounding boxes into the first bounding box so that the combined bounding box
      * now covers the two overlapping bounding boxes.
      * 
