@@ -28,7 +28,7 @@ public class SpellCorrectionTest
                 hmm.setEmissionSequence( util.convertStringToStates( tempWord ) );
                 correctedWord = util.convertStatesToString( hmm.getProbableStates() );
             }
-            while ( iterations < 100 && !tempWord.equalsIgnoreCase( correctedWord ) );
+            while ( iterations < 5 && !tempWord.equalsIgnoreCase( correctedWord ) );
 
             hmm.setEmissionSequence( util.convertStringToStates( incorrectWord ) );
             hmm.setEmissionSequence( hmm.getProbableStates() );
