@@ -153,18 +153,12 @@ public class Util
         String word = "";
         for ( int i = 0; i < states.length; i++ )
         {
-            if ( states[i] < 26 ) //The lowercase letters in ASCII
+            if ( states[i] == -1 )
             {
-                word += ( char ) ( states[i] + 97 );
+                word += ' ';
+                continue;
             }
-            else if ( states[i] >= 26 && states[i] < 36 ) //The numbers in ASCII
-            {
-                word += ( char ) ( states[i] - 26 + 48 );
-            }
-            else //Hyphen in ASCII
-            {
-                word += '-';
-            }
+            word += CharacterCorruption.getString( states[i] );
         }
 
         return word;
@@ -172,29 +166,61 @@ public class Util
 
     public int[] convertStringToStates( String word )
     {
-        int[] states = new int[word.length()];
+        ArrayList<Integer> states = new ArrayList<Integer>();
 
         word = word.toLowerCase();
 
         for ( int i = 0; i < word.length(); i++ )
         {
             char c = word.charAt( i );
+            char nextC = 0;
 
-            if ( c == '-' ) //hyphen
+            if ( i + 1 < word.length() )
             {
-                states[i] = 36;
+                nextC = word.charAt( i + 1 );
             }
-            else if ( c >= '0' && c <= '9' ) //0-9
+
+            if ( c == 'l' && nextC == 'o' )
             {
-                states[i] = 26 + c - 48;
+                states.add( 56 );
+                i++;
+            }
+            else if ( c == 'l' && nextC == 'a' )
+            {
+                states.add( 55 );
+                i++;
+            }
+            else if ( c == 'c' && nextC == 'l' )
+            {
+                states.add( 54 );
+                i++;
+            }
+            else if ( c == 'o' && nextC == 'l' )
+            {
+                states.add( 53 );
+                i++;
+            }
+            else if ( c >= '!' && c <= ';' ) //!-; in ASCII table
+            {
+                states.add( 26 + c - 33 );
+            }
+            else if ( c == ' ' )
+            {
+                states.add( -1 );
             }
             else //a-z
             {
-                states[i] = c - 97;
+                states.add( c - 97 );
             }
         }
 
-        return states;
+        int[] stateSeq = new int[states.size()];
+        for ( int i = 0; i < states.size(); i++ )
+        {
+            stateSeq[i] = states.get( i );
+        }
+
+        return stateSeq;
     }
 
     /**
@@ -292,5 +318,112 @@ public class Util
 
         tempList.add( tempPath );
         strings.put( tempSpecifier, tempList );
+    }
+
+    //FUTURE WORK:Can investigate and prepare a proper corpus with misspelled emissions instead of doing this random supervised training, a proper corpus of supervised training would realistically achieve better spell correction results
+    public enum CharacterCorruption
+    {
+        a( "a", new String[] { "o", "e", "u" } ),
+        b( "b", new String[] { "o", "3", "6", "8", "lo", "la" } ),
+        c( "c", new String[] { "e" } ),
+        d( "d", new String[] { "ol", "al", "cl" } ),
+        e( "e", new String[] { "o", "c" } ),
+        f( "f", new String[] { "t" } ),
+        g( "g", new String[] { "j", "q", "9", "y" } ),
+        h( "h", new String[] { "n", "m" } ),
+        i( "i", new String[] { "r", "j", "1", "!" } ),
+        j( "j", new String[] { "i", } ),
+        k( "k", new String[] { "x" } ),
+        l( "l", new String[] { "i", "1", "!" } ),
+        m( "m", new String[] { "n", "h" } ),
+        n( "n", new String[] { "m", "h" } ),
+        o( "o", new String[] { "a", "0" } ),
+        p( "p", new String[] { "o" } ),
+        q( "q", new String[] { "g", "y", "9" } ),
+        r( "r", new String[] { "i" } ),
+        s( "s", new String[] { "5", "$" } ),
+        t( "t", new String[] { "i", "-", "f", "7", "+" } ),
+        u( "u", new String[] { "a", "v" } ),
+        v( "v", new String[] { "u", "w" } ),
+        w( "w", new String[] { "v" } ),
+        x( "x", new String[] { "k" } ),
+        y( "y", new String[] { "q", "g" } ),
+        z( "z", new String[] { "2" } ),
+        exclamation( "!", new String[] { "i", "l" } ),
+        invCommas( "\"", new String[] {} ),
+        hash( "#", new String[] {} ),
+        dollar( "$", new String[] { "s" } ),
+        percent( "%", new String[] {} ),
+        ampersand( "&", new String[] {} ),
+        apostrophe( "'", new String[] {} ),
+        bracketL( "(", new String[] {} ),
+        bracketR( ")", new String[] {} ),
+        star( "*", new String[] {} ),
+        plus( "+", new String[] { "t" } ),
+        comma( ",", new String[] { "." } ),
+        hyphen( "-", new String[] { "t" } ),
+        period( ".", new String[] { "," } ),
+        slash( "/", new String[] {} ),
+        zero( "0", new String[] { "o" } ),
+        one( "1", new String[] { "i", "l" } ),
+        two( "2", new String[] { "z" } ),
+        three( "3", new String[] { "b" } ),
+        four( "4", new String[] {} ),
+        five( "5", new String[] { "s" } ),
+        six( "6", new String[] { "b" } ),
+        seven( "7", new String[] { "t" } ),
+        eight( "8", new String[] { "b" } ),
+        nine( "9", new String[] { "g", "q" } ),
+        colon( ":", new String[] { ";" } ),
+        semiColon( ";", new String[] { ":" } ),
+        ol( "ol", new String[] { "d" } ),
+        cl( "cl", new String[] { "d" } ),
+        la( "la", new String[] { "b" } ),
+        lo( "lo", new String[] { "b" } );
+
+        CharacterCorruption( String name, String[] corruptions )
+        {
+            this.corruptions = corruptions;
+            this.name = name;
+        }
+
+        private String[] corruptions;
+        private String name;
+
+        public String[] getCorruptions()
+        {
+            return this.corruptions;
+        }
+
+        /**
+         * Find the enum CharacterCorruption based off of the supplied char. Symbols can't be mapped to names directly like a char can be so we statically map them after z.
+         * 
+         * @param c The character that represents the CharacterCorruption
+         * @return The CharacterCorruption associated with that character
+         */
+        public static CharacterCorruption findCharacterCorruption( String s )
+        {
+            if ( s.length() == 1 )
+            {
+                char c = s.charAt( 0 );
+                if ( c >= '!' && c <= ';' )
+                {
+                    return values()[c - 33 + 26];
+                }
+                else
+                {
+                    return valueOf( c + "" );
+                }
+            }
+            else
+            {
+                return valueOf( s );
+            }
+        }
+
+        public static String getString( int state )
+        {
+            return values()[state].name;
+        }
     }
 }
