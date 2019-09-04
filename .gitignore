@@ -36,5 +36,3 @@ tessdata/pdf.ttx
 /bin/
 /imgs/*
 /models/*
-*.csv
-*.hmm

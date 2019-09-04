@@ -17,6 +17,40 @@ public class Util
     }
 
     /**
+     * Spell corrects the given OCR result string using the supplied spell check HMM. It turns the whole string to lowercase in order to spell correct the words using the HMM.
+     * 
+     * @param hmm The spell check HMM
+     * @param ocrResult The string from an OCR engine
+     * @return The spell corrected string
+     */
+    public String spellCorrectOCRResult(HMM hmm, String ocrResult)
+    {
+        String out = "";
+        for(String s : ocrResult.split( " " ))
+        {
+            
+            int iterations = 0;
+            String incorrectWord = s.toLowerCase();
+            String correctedWord = incorrectWord;
+            String tempWord;
+            
+            
+            do
+            {
+                iterations++;
+                tempWord = correctedWord;
+                hmm.setEmissionSequence( convertStringToStates( tempWord ) );
+                correctedWord = convertStatesToString( hmm.getProbableStates() );
+            }
+            while ( iterations < 3 && !tempWord.equalsIgnoreCase( correctedWord ) );
+            
+            out += correctedWord + " ";
+        }
+        
+        return out.trim();
+    }
+    
+    /**
      * Finds specified strings within the java args array and collates them into a proper string object and then categorises them into their specified type. i.e. finds and collates image paths This
      * method allows the functionality to parse multiple images with different handlers in one execution.
      * 

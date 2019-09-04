@@ -1,39 +1,61 @@
 package com.Jessy1237.DrugNameOCR;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 
 public class SpellCorrectionTest
 {
 
     public static void main( String[] args )
     {
-        if ( args.length != 3 )
+        if ( args.length != 2 )
         {
-            System.out.println( "USAGE: <hmm file> <correct spelt word> <misspelled word>" );
+            System.out.println( "USAGE: <hmm file> <SpellCorrectionTest.txt>" );
         }
         else
         {
             Util util = new Util();
             HMM hmm = new HMM( new File( args[0] ) );
-            String incorrectWord = args[2].toLowerCase();
-            String correctedWord = incorrectWord;
-            String correctWord = args[1].toLowerCase();
-            String tempWord;
-            int iterations = 0;
+            int correct = 0;
+            int numWords = 0;
 
-            do
+            try ( BufferedReader br = new BufferedReader( new FileReader( args[1] ) ) )
             {
-                iterations++;
-                tempWord = correctedWord;
-                hmm.setEmissionSequence( util.convertStringToStates( tempWord ) );
-                correctedWord = util.convertStatesToString( hmm.getProbableStates() );
-            }
-            while ( iterations < 5 && !tempWord.equalsIgnoreCase( correctedWord ) );
+                System.out.println( "#Incorrect Word, Corrected Word, Correct Word" );
+                String line = br.readLine();
+                while ( line != null )
+                {
 
-            hmm.setEmissionSequence( util.convertStringToStates( incorrectWord ) );
-            hmm.setEmissionSequence( hmm.getProbableStates() );
-            System.out.println( "Inputting misspelled word '" + incorrectWord.toLowerCase() + "' expecting corrected '" + correctWord + "' and got: '" + correctedWord + "'" );
-            System.out.println( "It took " + iterations + " iterations to reach this correct spelt word" );
+                    if ( line.startsWith( "#" ) )
+                    {
+                        line = br.readLine();
+                        continue;
+                    }
+
+                    numWords++;
+
+                    String incorrectWord = line.split( " " )[0].toLowerCase();
+                    String correctWord = line.split( " " )[1].toLowerCase();
+                    String correctedWord = util.spellCorrectOCRResult( hmm, incorrectWord );
+
+                    System.out.println( incorrectWord + ", " + correctedWord + ", " + correctWord );
+
+                    if ( correctWord.equalsIgnoreCase( correctedWord ) )
+                        correct++;
+
+                    line = br.readLine();
+                }
+
+                br.close();
+
+                System.out.println( "------------------------------------" );
+                System.out.println( String.format( "Read in %d test words and successfully corrected %d (%.2f%%)", numWords, correct, ( double ) ( ( double ) correct / ( double ) numWords * 100.0 ) ) );
+            }
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
         }
     }
 }
