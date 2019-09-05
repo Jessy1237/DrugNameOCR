@@ -2,9 +2,16 @@ package com.Jessy1237.DrugNameOCR;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+
+import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
+import com.github.cliftonlabs.json_simple.JsonArray;
+import com.github.cliftonlabs.json_simple.JsonException;
+import com.github.cliftonlabs.json_simple.JsonObject;
+import com.github.cliftonlabs.json_simple.Jsoner;
 
 public class Util
 {
@@ -17,24 +24,76 @@ public class Util
     }
 
     /**
+     * Returns the first found test result found within the json string from a rest search get.
+     * 
+     * @param jsonString The json string to parse
+     * @return The first search result or null if no search results found
+     * @throws JsonException if the json string is invalid
+     */
+    public SearchResult getRestSearchResult( String jsonString ) throws JsonException
+    {
+        JsonObject jo = ( JsonObject ) Jsoner.deserialize( jsonString );
+        jo = ( JsonObject ) jo.get( "result" );
+
+        JsonArray ja = ( JsonArray ) jo.get( "results" );
+        Iterator<?> itr = ja.iterator();
+        jo = ( JsonObject ) itr.next();
+
+        SearchResult sr = null;
+
+        if ( !( ( ( String ) jo.get( "ui" ) ).equalsIgnoreCase( "NONE" ) || ( ( String ) jo.get( "name" ) ).equalsIgnoreCase( "NO RESULTS" ) ) )
+        {
+            sr = new SearchResult( jo );
+        }
+
+        return sr;
+    }
+
+    /**
+     * Gets the list of semantic type identifiers from the json string from a rest content get.
+     * 
+     * @param jsonString The json string to parse
+     * @return list of semantic type identifiers as strings
+     * @throws JsonException if the json string is invalid
+     */
+    public List<String> getSemanticTUIs( String jsonString ) throws JsonException
+    {
+        ArrayList<String> tuis = new ArrayList<String>();
+
+        JsonObject jo = ( JsonObject ) Jsoner.deserialize( jsonString );
+        jo = ( JsonObject ) jo.get( "result" );
+
+        JsonArray ja = ( JsonArray ) jo.get( "semanticTypes" );
+        Iterator<?> itr = ja.iterator();
+
+        while ( itr.hasNext() )
+        {
+            jo = ( JsonObject ) itr.next();
+            String uri = ( String ) jo.get( "uri" );
+            tuis.add( uri.substring( uri.lastIndexOf( "/" ) + 1 ) );
+        }
+
+        return tuis;
+    }
+
+    /**
      * Spell corrects the given OCR result string using the supplied spell check HMM. It turns the whole string to lowercase in order to spell correct the words using the HMM.
      * 
      * @param hmm The spell check HMM
      * @param ocrResult The string from an OCR engine
      * @return The spell corrected string
      */
-    public String spellCorrectOCRResult(HMM hmm, String ocrResult)
+    public String spellCorrectOCRResult( HMM hmm, String ocrResult )
     {
         String out = "";
-        for(String s : ocrResult.split( " " ))
+        for ( String s : ocrResult.split( " " ) )
         {
-            
+
             int iterations = 0;
             String incorrectWord = s.toLowerCase();
             String correctedWord = incorrectWord;
             String tempWord;
-            
-            
+
             do
             {
                 iterations++;
@@ -43,13 +102,13 @@ public class Util
                 correctedWord = convertStatesToString( hmm.getProbableStates() );
             }
             while ( iterations < 3 && !tempWord.equalsIgnoreCase( correctedWord ) );
-            
+
             out += correctedWord + " ";
         }
-        
+
         return out.trim();
     }
-    
+
     /**
      * Finds specified strings within the java args array and collates them into a proper string object and then categorises them into their specified type. i.e. finds and collates image paths This
      * method allows the functionality to parse multiple images with different handlers in one execution.
