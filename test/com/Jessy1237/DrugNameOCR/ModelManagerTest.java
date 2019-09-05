@@ -10,7 +10,7 @@ public class ModelManagerTest
         {
             if ( args.length != 1 )
             {
-                System.out.println( "USAGE: <model directory>" );
+                System.out.println( "ARGS: <model directory>" );
             }
             else
             {

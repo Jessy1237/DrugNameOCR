@@ -17,7 +17,7 @@ public class HMMGenerationTest
     {
         if ( args.length != 2 )
         {
-            System.out.println( "USAGE: <HMM file path> <PBS csv path>" );
+            System.out.println( "ARGS: <HMM file path> <PBS csv path>" );
         }
         else
         {

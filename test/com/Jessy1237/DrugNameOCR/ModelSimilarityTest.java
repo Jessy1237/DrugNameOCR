@@ -16,7 +16,7 @@ public class ModelSimilarityTest
         {
             if ( args.length != 2 )
             {
-                System.out.println( "USAGE: <image> <model directory>" );
+                System.out.println( "ARGS: <image> <model directory>" );
             }
             else
             {

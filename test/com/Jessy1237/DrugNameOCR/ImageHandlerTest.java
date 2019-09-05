@@ -14,7 +14,7 @@ public class ImageHandlerTest
         {
             if ( args.length != 1 )
             {
-                System.out.println( "USAGE: <image>" );
+                System.out.println( "ARGS: <image>" );
             }
             else
             {

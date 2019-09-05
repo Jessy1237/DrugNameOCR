@@ -17,7 +17,7 @@ public class BoundingBoxGenerationTest
         {
             if ( args.length != 2 )
             {
-                System.out.println( "USAGE: <image directory> <image name>" );
+                System.out.println( "ARGS: <image directory> <image name>" );
             }
             else
             {

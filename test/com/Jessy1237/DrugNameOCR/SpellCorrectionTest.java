@@ -11,7 +11,7 @@ public class SpellCorrectionTest
     {
         if ( args.length != 2 )
         {
-            System.out.println( "USAGE: <hmm file> <SpellCorrectionTest.txt>" );
+            System.out.println( "ARGS: <hmm file> <SpellCorrectionTest.txt>" );
         }
         else
         {
