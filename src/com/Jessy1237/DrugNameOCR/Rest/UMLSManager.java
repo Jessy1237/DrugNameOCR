@@ -85,4 +85,50 @@ public class UMLSManager
         RestAssured.baseURI = tempURI;
         return tuis;
     }
+
+    public enum RestSearchType
+    {
+        WORD, //Use this if you want the whole line/sentence searched into the UMLS database
+        APPROX, //Use this if you want each separate word searched into the UMLS database with an approximate match
+        EXACT; //Use this if you want each separate word searched into the UMLS database with an exact match
+
+        RestSearchType()
+        {
+        }
+    }
+
+    //TODO: Could alternatively change this to be a hashmap loaded in at runtime of mapping of TUI to Name.
+    public enum DrugTUIs
+    {
+        ANTIBIOTIC( "T195" ),
+        CLINICAL_DRUG( "T200" ),
+        PHARMACOLOGIC_SUBSTANCE( "T121" ),
+        VITAMIN( "T127" );
+
+        private String tui;
+
+        DrugTUIs( String tui )
+        {
+            this.tui = tui;
+        }
+
+        public String getTUI()
+        {
+            return tui;
+        }
+
+        public static boolean contains( String tui )
+        {
+            boolean contains = false;
+            for ( DrugTUIs dt : values() )
+            {
+                if ( dt.getTUI().equalsIgnoreCase( tui ) )
+                {
+                    contains = true;
+                }
+            }
+
+            return contains;
+        }
+    }
 }
