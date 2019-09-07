@@ -2,7 +2,6 @@ package com.Jessy1237.DrugNameOCR;
 
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -28,9 +27,9 @@ public class ModelManager
         this.modelDirectory = modelDirectory;
 
         if ( !modelDirectory.endsWith( File.separator ) )
-            modelDirectory += File.separator;
+            this.modelDirectory += File.separator;
 
-        File[] files = new File( modelDirectory ).listFiles( new FileFilter() {
+        File[] files = new File( this.modelDirectory ).listFiles( new FileFilter() {
 
             @Override
             public boolean accept( File pathname )
@@ -40,7 +39,14 @@ public class ModelManager
 
         } );
 
-        modelFiles = new ArrayList<File>( Arrays.asList( files ) );
+        if ( files != null )
+        {
+            modelFiles = new ArrayList<File>( Arrays.asList( files ) );
+        }
+        else
+        {
+            modelFiles = new ArrayList<File>();
+        }
 
         models = new ArrayList<Model>();
     }
@@ -94,12 +100,20 @@ public class ModelManager
             JsonObject jo = ( JsonObject ) Jsoner.deserialize( new FileReader( file ) );
 
             temp.setId( ( String ) jo.get( "id" ) );
-            temp.setRegionOfInterest( new BoundingBox( ( String ) jo.get( "regionOfInterest" ) ) );
+
+            JsonArray ja = ( JsonArray ) jo.get( "rois" );
+            Iterator<?> itr = ja.iterator();
+
+            while ( itr.hasNext() )
+            {
+                temp.getRegionOfInterests().add( new RegionOfInterest( ( String ) itr.next() ) );
+            }
+
             temp.setWidth( Integer.parseInt( ( String ) jo.get( "width" ) ) );
             temp.setHeight( Integer.parseInt( ( String ) jo.get( "height" ) ) );
 
-            JsonArray ja = ( JsonArray ) jo.get( "boxes" );
-            Iterator<?> itr = ja.iterator();
+            ja = ( JsonArray ) jo.get( "boxes" );
+            itr = ja.iterator();
 
             while ( itr.hasNext() )
             {
@@ -116,10 +130,13 @@ public class ModelManager
      * Writes a model to json file
      * 
      * @param model The model to be written to file
-     * @throws FileNotFoundException If the model cannot be written to file
+     * @throws IOException
      */
-    public void writeModelFile( Model model ) throws FileNotFoundException
+    public void writeModelFile( Model model ) throws IOException
     {
+        File dir = new File( modelDirectory );
+        dir.mkdirs();
+
         PrintWriter pw = new PrintWriter( modelDirectory + model.getId() + ".model" );
         pw.write( model.toJSONString() );
         pw.flush();

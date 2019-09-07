@@ -45,7 +45,11 @@ public class BoundingBoxGenerationTest
                 ih.drawBoundingBoxes( combined, 2 );
 
                 ModelManager mm = new ModelManager( "models" );
-                mm.writeModelFile( new Model( ih.getImageName(), new ArrayList<BoundingBox>( combined ), new BoundingBox(), ih.getCurrentImage().width(), ih.getCurrentImage().height() ) );
+
+                ArrayList<RegionOfInterest> rois = new ArrayList<RegionOfInterest>();
+                rois.add( new RegionOfInterest() );
+
+                mm.writeModelFile( new Model( ih.getImageName(), new ArrayList<BoundingBox>( combined ), rois, ih.getCurrentImage().width(), ih.getCurrentImage().height() ) );
             }
         }
         catch ( Exception e )

@@ -12,7 +12,7 @@ public class Model
 {
     private List<BoundingBox> boxes;
     private String id;
-    private BoundingBox regionOfInterest;
+    private List<RegionOfInterest> rois;
     private int width;
     private int height;
 
@@ -20,16 +20,16 @@ public class Model
     {
         id = "";
         boxes = new ArrayList<BoundingBox>();
-        regionOfInterest = new BoundingBox();
+        rois = new ArrayList<RegionOfInterest>();
         width = -1;
         height = -1;
     }
 
-    public Model( String id, List<BoundingBox> boxes, BoundingBox regionOfInterest, int width, int height )
+    public Model( String id, List<BoundingBox> boxes, List<RegionOfInterest> rois, int width, int height )
     {
         this.id = id;
         this.boxes = boxes;
-        this.regionOfInterest = regionOfInterest;
+        this.rois = rois;
         this.width = width;
         this.height = height;
     }
@@ -44,9 +44,9 @@ public class Model
         return id;
     }
 
-    public BoundingBox getRegionOfInterest()
+    public List<RegionOfInterest> getRegionOfInterests()
     {
-        return regionOfInterest;
+        return rois;
     }
 
     public int getWidth()
@@ -69,9 +69,9 @@ public class Model
         this.id = id;
     }
 
-    public void setRegionOfInterest( BoundingBox roi )
+    public void setRegionOfInterests( List<RegionOfInterest> rois )
     {
-        regionOfInterest = roi;
+        this.rois = rois;
     }
 
     public void setWidth( int width )
@@ -86,7 +86,14 @@ public class Model
 
     public boolean isValid()
     {
-        return !( boxes.isEmpty() || id.isEmpty() ) && regionOfInterest.isValid();
+        boolean valid = !( boxes.isEmpty() || id.isEmpty() );
+
+        for ( RegionOfInterest roi : rois )
+        {
+            valid = valid && roi.isValid();
+        }
+
+        return valid;
     }
 
     /**
@@ -99,11 +106,18 @@ public class Model
         JsonObject jo = new JsonObject();
 
         jo.put( "id", id );
-        jo.put( "regionOfInterest", regionOfInterest.toString() );
+
+        JsonArray ja = new JsonArray();
+        for ( RegionOfInterest roi : rois )
+        {
+            ja.add( roi.toString() );
+        }
+
+        jo.put( "rois", ja );
         jo.put( "width", width + "" );
         jo.put( "height", height + "" );
 
-        JsonArray ja = new JsonArray();
+        ja = new JsonArray();
 
         for ( BoundingBox bb : boxes )
         {
