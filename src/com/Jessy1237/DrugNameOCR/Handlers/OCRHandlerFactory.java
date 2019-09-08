@@ -1,12 +1,14 @@
 package com.Jessy1237.DrugNameOCR.Handlers;
 
+import com.Jessy1237.DrugNameOCR.Models.Model;
+
 public class OCRHandlerFactory
 {
 
     private final static String TESSERACT = "-AT";
     private final static String GOOGLE = "-MG";
 
-    public static OCRHandler createOCRHandler( String specifier, ImageHandler ih ) throws IllegalArgumentException
+    public static OCRHandler createOCRHandler( String specifier, ImageHandler ih, Model m ) throws IllegalArgumentException
     {
         OCRHandler ocrh = null;
         if ( specifier.isEmpty() )
@@ -16,7 +18,7 @@ public class OCRHandlerFactory
 
         if ( specifier.equalsIgnoreCase( TESSERACT ) )
         {
-            ocrh = new TesseractOCRHandler( ih );
+            ocrh = new TesseractOCRHandler( ih, m );
         }
         else if ( specifier.equalsIgnoreCase( GOOGLE ) )
         {

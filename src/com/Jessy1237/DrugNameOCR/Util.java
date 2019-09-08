@@ -169,9 +169,9 @@ public class Util
 
         for ( int i = 0; i < args.length; i++ )
         {
-            if ( args[i].substring( 0, 3 ).equalsIgnoreCase( IMAGE_TAG ) && foundSpecifier )
+            if ( args[i].substring( 0, IMAGE_TAG.length() ).equalsIgnoreCase( IMAGE_TAG ) && foundSpecifier )
             {
-                String tempPath = args[i].substring( 3 );
+                String tempPath = args[i].substring( IMAGE_TAG.length() );
 
                 if ( !tempPath.isEmpty() )
                 {
@@ -476,11 +476,11 @@ public class Util
         f( "f", new String[] { "t" } ),
         g( "g", new String[] { "j", "q", "9", "y" } ),
         h( "h", new String[] { "n", "m" } ),
-        i( "i", new String[] { "r", "j", "1", "!" } ),
+        i( "i", new String[] { "r", "j", "1", "!", } ),
         j( "j", new String[] { "i", } ),
         k( "k", new String[] { "x" } ),
         l( "l", new String[] { "i", "1", "!" } ),
-        m( "m", new String[] { "n", "h" } ),
+        m( "m", new String[] { "n", "h", "i" } ),
         n( "n", new String[] { "m", "h" } ),
         o( "o", new String[] { "a", "0" } ),
         p( "p", new String[] { "o" } ),

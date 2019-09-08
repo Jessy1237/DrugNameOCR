@@ -142,4 +142,31 @@ public class ModelManager
         pw.flush();
         pw.close();
     }
+
+    /**
+     * Finds the model that most closely resembles the list of combined bounding boxes for the given image dimensions
+     * 
+     * @param combined The list of combined bounding boxes
+     * @param width The width of the image that the bounding boxes were found from
+     * @param height The height of the image that the bounding boxes were found from
+     * @return The best model to use for the best similarity that is also greater than 70% otherwise null
+     */
+    public Model findBestModel( List<BoundingBox> combined, int width, int height )
+    {
+        double sim = -70.0f;
+        Model model = null;
+        for ( Model m : models )
+        {
+            double tempSim = m.calculateSimilarity( combined, width, height );
+
+            if ( tempSim > sim )
+            {
+                sim = tempSim;
+                model = new Model( m );
+                model.setAssociatedSimilarity( sim );
+            }
+        }
+
+        return model;
+    }
 }

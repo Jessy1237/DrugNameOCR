@@ -250,6 +250,21 @@ public class ImageHandler implements Runnable
     }
 
     /**
+     * Saves a cropped version of the current image to file based off of the supplied bounding box
+     * 
+     * @param bb The bounding box of the section of the image that you want to save to file
+     * @param suffix The suffix to be hyphenated to the end of the image name
+     * @return The path to the saved image file
+     */
+    public String saveCroppedImage( BoundingBox bb, String suffix )
+    {
+        Mat img = current.submat( new Rect( bb.getMinX(), bb.getMinY(), bb.getMaxX() - bb.getMinX(), bb.getMaxY() - bb.getMinY() ) );
+        String path = dir + imgName + "-" + suffix + extension;
+        Imgcodecs.imwrite( path, img );
+        return path;
+    }
+
+    /**
      * Prepares the given image by applying a pre-process for OCR. It will write each effect applied to the image to file if the createImages boolean of the image handler is true.
      * 
      * @param img The image to pre-process

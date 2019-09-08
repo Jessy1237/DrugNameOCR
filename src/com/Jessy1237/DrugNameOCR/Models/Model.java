@@ -15,6 +15,7 @@ public class Model
     private List<RegionOfInterest> rois;
     private int width;
     private int height;
+    private double sim;
 
     public Model()
     {
@@ -32,6 +33,15 @@ public class Model
         this.rois = rois;
         this.width = width;
         this.height = height;
+    }
+
+    public Model( Model m )
+    {
+        this.id = m.getId();
+        this.boxes = m.getBoundingBoxes();
+        this.rois = m.getRegionOfInterests();
+        this.width = m.getWidth();
+        this.height = m.getHeight();
     }
 
     public List<BoundingBox> getBoundingBoxes()
@@ -59,6 +69,11 @@ public class Model
         return height;
     }
 
+    public double getAssociatedSimilarity()
+    {
+        return sim;
+    }
+
     public void setBoundingBoxes( List<BoundingBox> boxes )
     {
         this.boxes = boxes;
@@ -82,6 +97,11 @@ public class Model
     public void setHeight( int height )
     {
         this.height = height;
+    }
+
+    public void setAssociatedSimilarity( double sim )
+    {
+        this.sim = sim;
     }
 
     public boolean isValid()
@@ -326,24 +346,10 @@ public class Model
 
         for ( BoundingBox bb : bbs )
         {
-            scaledBBs.add( scaleBB( bb, imgW, imgH ) );
+            scaledBBs.add( bb.getScaledBB( width, height, imgW, imgH ) );
         }
 
         return scaledBBs;
-    }
-
-    /**
-     * Scales the given bounding box dimensions to fit the model dimensions.
-     * 
-     * @param bb The bounding box to scale to the model dimensions
-     * @param imgW The width of the image that the bounding box was from
-     * @param imgH The height of the image that the bounding box was from
-     * @return The scaled bounding box
-     */
-    private BoundingBox scaleBB( BoundingBox bb, int imgW, int imgH )
-    {
-        return new BoundingBox( ( int ) ( ( double ) ( bb.getMinX() / ( double ) imgW * ( double ) width ) ), ( int ) ( ( double ) ( bb.getMinY() / ( double ) imgH * ( double ) height ) ), ( int ) ( ( double ) ( bb.getMaxX() / ( double ) imgW
-                * ( double ) width ) ), ( int ) ( ( double ) ( bb.getMaxY() / ( double ) imgH * ( double ) height ) ), bb.getId() );
     }
 
     //    private class Result

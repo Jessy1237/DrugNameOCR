@@ -36,21 +36,9 @@ public class ModelSimilarityTest
                 mm.readModels();
 
                 //Find the best suited model to the image
-                double sim = -1.0f;
-                Model model = null;
-                for ( Model m : mm.getModels() )
-                {
-                    double tempSim = m.calculateSimilarity( combined, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
-                    System.out.println( tempSim );
+                Model model = mm.findBestModel( combined, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
 
-                    if ( tempSim > sim )
-                    {
-                        sim = tempSim;
-                        model = m;
-                    }
-                }
-
-                System.out.println( "Best model is '" + model.getId() + "' with similarity: " + ( sim * 100f ) + "%" );
+                System.out.println( "Best model is '" + model.getId() + "' with similarity: " + ( model.getAssociatedSimilarity() * 100f ) + "%" );
             }
         }
         catch ( Exception e )

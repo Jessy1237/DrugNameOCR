@@ -126,6 +126,22 @@ public class BoundingBox implements Cloneable, Comparator<BoundingBox>
         this.id = id;
     }
 
+    /**
+     * Scales the given bounding box dimensions to fit the model dimensions.
+     * 
+     * @param bb The bounding box to scale to the model dimensions
+     * @param modelW The width of the model to scale the BB to
+     * @param modelH The height of the model to scale the BB to
+     * @param imgW The width of the image that the bounding box was from
+     * @param imgH The height of the image that the bounding box was from
+     * @return The scaled bounding box
+     */
+    public BoundingBox getScaledBB( int modelW, int modelH, int imgW, int imgH )
+    {
+        return new BoundingBox( ( int ) ( ( double ) ( minX / ( double ) imgW * ( double ) modelW ) ), ( int ) ( ( double ) ( minY / ( double ) imgH * ( double ) modelH ) ), ( int ) ( ( double ) ( maxX / ( double ) imgW * ( double ) modelW ) ), ( int ) ( ( double ) ( maxY / ( double ) imgH
+                * ( double ) modelH ) ), id );
+    }
+
     public boolean isValid()
     {
         return ( minX != -1 && minY != -1 && maxX != -1 && maxY != -1 );

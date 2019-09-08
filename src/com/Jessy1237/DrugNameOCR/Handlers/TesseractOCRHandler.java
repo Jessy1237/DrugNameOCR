@@ -1,20 +1,25 @@
 package com.Jessy1237.DrugNameOCR.Handlers;
 
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+
 import org.bytedeco.javacpp.BytePointer;
 import org.bytedeco.leptonica.PIX;
 import org.bytedeco.leptonica.global.lept;
 import org.bytedeco.tesseract.TessBaseAPI;
 
+import com.Jessy1237.DrugNameOCR.Models.Model;
+
 class TesseractOCRHandler extends OCRHandler
 {
 
-    public TesseractOCRHandler( ImageHandler ih )
+    public TesseractOCRHandler( ImageHandler ih, Model m )
     {
-        super( ih );
+        super( ih, m );
     }
 
     @Override
-    public void run()
+    protected String[] getText( String imgLoc )
     {
         BytePointer outText;
 
@@ -28,19 +33,42 @@ class TesseractOCRHandler extends OCRHandler
         }
 
         //Load the image into a format tesseract can use
-        PIX image = lept.pixRead( ih.getCurrentImagePath() );
+        PIX image = lept.pixRead( imgLoc );
         image.xres( 300 ); //min res wanted
         image.yres( 300 );
         api.SetImage( image );
 
         //Get OCR result
-        outText = api.GetHOCRText( 0 );
-        outputString = outText.getString();
+        outText = api.GetUTF8Text();
+        String outputString = "";
+        try
+        {
+            outputString = outText.getString( "UTF-8" );
+        }
+        catch ( UnsupportedEncodingException e )
+        {
+            e.printStackTrace();
+        }
 
         //Destroy used object and release memory
         api.End();
         outText.deallocate();
         lept.pixDestroy( image );
         api.close();
+
+        //Now remove blank lines from our output string and then save the lines into an array
+        ArrayList<String> outputList = new ArrayList<String>();
+        for ( String str : outputString.split( "\n" ) )
+        {
+            if ( !str.trim().isEmpty() )
+            {
+                outputList.add( str );
+            }
+        }
+
+        String[] outputArray = new String[outputList.size()];
+        outputArray = outputList.toArray( outputArray );
+
+        return outputArray;
     }
 }
