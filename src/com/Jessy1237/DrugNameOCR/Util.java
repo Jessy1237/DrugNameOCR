@@ -10,6 +10,7 @@ import java.util.List;
 import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
 import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -26,26 +27,39 @@ public class Util
     }
 
     /**
-     * Returns the first found test result found within the json string from a rest search get.
+     * Returns the closest match found test result to the original word found within the json string from a rest search get. If the similarity is below 50% then it will return null.
      * 
+     * @param word The word used to find the rest search result
      * @param jsonString The json string to parse
      * @return The first search result or null if no search results found
      * @throws JsonException if the json string is invalid
      */
-    public SearchResult getRestSearchResult( String jsonString ) throws JsonException
+    public SearchResult getRestSearchResult( String word, String jsonString ) throws JsonException
     {
         JsonObject jo = ( JsonObject ) Jsoner.deserialize( jsonString );
         jo = ( JsonObject ) jo.get( "result" );
 
         JsonArray ja = ( JsonArray ) jo.get( "results" );
         Iterator<?> itr = ja.iterator();
-        jo = ( JsonObject ) itr.next();
-
         SearchResult sr = null;
+        double sim = 50.0;
+        StateWeightedLevenshtein swl = new StateWeightedLevenshtein( this );
 
-        if ( !( ( ( String ) jo.get( "ui" ) ).equalsIgnoreCase( "NONE" ) || ( ( String ) jo.get( "name" ) ).equalsIgnoreCase( "NO RESULTS" ) ) )
+        while ( itr.hasNext() )
         {
-            sr = new SearchResult( jo );
+            jo = ( JsonObject ) itr.next();
+
+            if ( !( ( ( String ) jo.get( "ui" ) ).equalsIgnoreCase( "NONE" ) || ( ( String ) jo.get( "name" ) ).equalsIgnoreCase( "NO RESULTS" ) ) )
+            {
+                SearchResult temp = new SearchResult( jo );
+                double tempSim = swl.similarityPercentage( word, temp.getName() );
+
+                if ( tempSim > sim )
+                {
+                    sim = tempSim;
+                    sr = temp;
+                }
+            }
         }
 
         return sr;
@@ -277,23 +291,31 @@ public class Util
 
             if ( c == 'l' && nextC == 'o' )
             {
-                states.add( 56 );
+                states.add( CharacterCorruption.lo.ordinal() );
                 i++;
             }
             else if ( c == 'l' && nextC == 'a' )
             {
-                states.add( 55 );
+                states.add( CharacterCorruption.la.ordinal() );
                 i++;
             }
             else if ( c == 'c' && nextC == 'l' )
             {
-                states.add( 54 );
+                states.add( CharacterCorruption.cl.ordinal() );
                 i++;
             }
             else if ( c == 'o' && nextC == 'l' )
             {
-                states.add( 53 );
+                states.add( CharacterCorruption.ol.ordinal() );
                 i++;
+            }
+            else if ( c == '[' )
+            {
+                states.add( CharacterCorruption.bracketL.ordinal() );
+            }
+            else if ( c == ']' )
+            {
+                states.add( CharacterCorruption.bracketR.ordinal() );
             }
             else if ( c >= '!' && c <= ';' ) //!-; in ASCII table
             {
@@ -525,6 +547,14 @@ public class Util
                 if ( c >= '!' && c <= ';' )
                 {
                     return values()[c - 33 + 26];
+                }
+                else if ( c == '[' )
+                {
+                    return CharacterCorruption.bracketL;
+                }
+                else if ( c == ']' )
+                {
+                    return CharacterCorruption.bracketR;
                 }
                 else
                 {

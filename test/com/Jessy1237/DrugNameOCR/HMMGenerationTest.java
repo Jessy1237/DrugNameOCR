@@ -5,8 +5,8 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Random;
 
-import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
 import com.Jessy1237.DrugNameOCR.Util.CharacterCorruption;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
 
 public class HMMGenerationTest
 {
@@ -85,6 +85,10 @@ public class HMMGenerationTest
                 divideMatrixByArray( emissionsMatrix, numEmissionChars );
                 divideMatrixByNum( initialState, numWords );
 
+                //If a character was never found in the test data then set its emission and transition to itself
+                checkMatrix( transMatrix, numChars );
+                checkMatrix( emissionsMatrix, numEmissionChars );
+
                 HMM hmm = new HMM( transMatrix, emissionsMatrix, initialState, args[0] );
                 hmm.writeToFile();
 
@@ -143,6 +147,40 @@ public class HMMGenerationTest
         return stateSeq;
     }
 
+    /**
+     * Corrects a matrix if a character is never encountered then its only emission would be itself and for now we will set its only transition to itself
+     * 
+     * @param matrix The matrix to check
+     * @param num the number of times the states were encountered
+     */
+    public static void checkMatrix( double[][] matrix, int[] num )
+    {
+        for ( int j = 0; j < matrix.length; j++ )
+        {
+            boolean change = true;
+
+            if ( num[j] == 0 )
+            {
+                for ( int i = 0; i < matrix[0].length; i++ )
+                {
+                    if ( matrix[j][i] != 0.0 ) //Avoid NaN by setting it to 0
+                    {
+                        change = false;
+                    }
+                }
+            }
+            else
+            {
+                change = false;
+            }
+
+            if ( change )
+            {
+                matrix[j][j] = 1.0;
+            }
+        }
+    }
+
     public static void divideMatrixByArray( double[][] matrix, int[] num )
     {
         for ( int j = 0; j < matrix.length; j++ )
@@ -151,7 +189,7 @@ public class HMMGenerationTest
             {
                 if ( num[j] == 0 || matrix[j][i] == 0 ) //Avoid NaN by setting it to 0
                 {
-                    matrix[j][i] = 0;
+                    matrix[j][i] = 0.0;
                 }
                 else
                 {
@@ -169,7 +207,7 @@ public class HMMGenerationTest
             {
                 if ( num == 0 || matrix[j][i] == 0 ) //Avoid NaN by setting it to 0
                 {
-                    matrix[j][i] = 0;
+                    matrix[j][i] = 0.0;
                 }
                 else
                 {

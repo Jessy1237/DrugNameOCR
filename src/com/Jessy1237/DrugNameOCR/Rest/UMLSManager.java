@@ -24,7 +24,7 @@ public class UMLSManager
     }
 
     /**
-     * Finds the Drug Information for the supplied word. If the word cannot be found in the UMLS database then a null search result is returned.
+     * Finds the Drug Information for the supplied word for the closest 3 matches. If the word cannot be found in the UMLS database then a null search result is returned.
      * 
      * @param word The word to search for in the UMLS database
      * @return The search result holding all the information from the UMLS database or null, if no result is found for the word, a https issue or there is a JSON error
@@ -35,7 +35,7 @@ public class UMLSManager
         String tempURI = RestAssured.baseURI;
         RestAssured.baseURI = "https://uts-ws.nlm.nih.gov";
 
-        Response response = given().request().with().param( "ticket", ticketClient.getST( tgt ) ).param( "string", word ).param( "inputType", "atom" ).param( "searchType", "approximate" ).when().get( "/rest/search/current" );
+        Response response = given().request().with().param( "ticket", ticketClient.getST( tgt ) ).param( "string", word ).param( "inputType", "atom" ).param( "pageSize", "3" ).param( "searchType", "approximate" ).when().get( "/rest/search/current" );
 
         if ( response.getStatusCode() == 200 )
         {
@@ -43,7 +43,7 @@ public class UMLSManager
             String output = response.getBody().asString();
             try
             {
-                result = util.getRestSearchResult( output );
+                result = util.getRestSearchResult( word, output );
             }
             catch ( JsonException e )
             {
