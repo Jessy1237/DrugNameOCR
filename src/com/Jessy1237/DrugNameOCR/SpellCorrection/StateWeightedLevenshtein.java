@@ -21,13 +21,24 @@ public class StateWeightedLevenshtein
     }
 
     /**
-     * Equivalent to distance(s1, s2, Double.MAX_VALUE).
+     * Equivalent to similarityPercentage(s1, s2, Double.MAX_VALUE).
      */
     public final double similarityPercentage( final String s1, final String s2 )
     {
         return similarityPercentage( s1, s2, Double.MAX_VALUE );
     }
 
+    /**
+     * Compute Levenshtein distance similarity using provided weights for substitution. Instead of comparing characters as you normally would for Levenshtein distance we are instead using the same
+     * process but comparing our character states, which include insertions and deletions already. The percentage is found as (1.0 - distance/maxLength(str1,str2))*100.0
+     * 
+     * @param s1 The first string to compare.
+     * @param s2 The second string to compare.
+     * @param limit The maximum result to compute before stopping. This means that the calculation can terminate early if you only care about strings with a certain distance. Set this to
+     *            Double.MAX_VALUE if you want to run the calculation to completion in every case.
+     * @return The computed weighted Levenshtein distance as a similarity percentage.
+     * @throws NullPointerException if s1 or s2 is null.
+     */
     public final double similarityPercentage( final String str1, final String str2, final double limit )
     {
         if ( str1 == null )
@@ -69,7 +80,7 @@ public class StateWeightedLevenshtein
      * 
      * @param s1 The first string to compare.
      * @param s2 The second string to compare.
-     * @param limit The maximum result to compute before stopping. This means that the calculation can terminate early if you only care about strings with a certain similarity. Set this to
+     * @param limit The maximum result to compute before stopping. This means that the calculation can terminate early if you only care about strings with a certain distance. Set this to
      *            Double.MAX_VALUE if you want to run the calculation to completion in every case.
      * @return The computed weighted Levenshtein distance.
      * @throws NullPointerException if s1 or s2 is null.
@@ -172,7 +183,12 @@ public class StateWeightedLevenshtein
 
     private double substitutionCost( int state1, int state2 )
     {
-        // The cost for substituting a known corruption should be considered smaller as these are known errors for OCR.
+        if ( state1 == -1 ) //If the state is a space
+        {
+            return 1.0;
+        }
+
+        // The cost for substituting a known corruption should be considered smaller as these are known errors for OCR.     
         if ( CharacterCorruption.values()[state1].containsCorruption( util.convertStatesToString( new int[] { state2 } ) ) )
         {
             return 0.5;//TODO: Investigate an optimal weighted value for valid spell corrected emissions/states
