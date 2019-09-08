@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 
+import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
 import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
 import com.github.cliftonlabs.json_simple.JsonArray;

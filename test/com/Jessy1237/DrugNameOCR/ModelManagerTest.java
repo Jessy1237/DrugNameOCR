@@ -1,5 +1,8 @@
 package com.Jessy1237.DrugNameOCR;
 
+import com.Jessy1237.DrugNameOCR.Models.Model;
+import com.Jessy1237.DrugNameOCR.Models.ModelManager;
+
 public class ModelManagerTest
 {
 

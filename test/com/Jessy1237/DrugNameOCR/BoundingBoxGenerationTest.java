@@ -6,6 +6,10 @@ import java.util.List;
 import org.opencv.core.Core;
 
 import com.Jessy1237.DrugNameOCR.Handlers.ImageHandler;
+import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
+import com.Jessy1237.DrugNameOCR.Models.Model;
+import com.Jessy1237.DrugNameOCR.Models.ModelManager;
+import com.Jessy1237.DrugNameOCR.Models.RegionOfInterest;
 
 public class BoundingBoxGenerationTest
 {

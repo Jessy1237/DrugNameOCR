@@ -7,7 +7,7 @@ import java.util.StringTokenizer;
 import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 
-import com.Jessy1237.DrugNameOCR.BoundingBox;
+import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
 
 public class XMLHandler extends DefaultHandler
 {

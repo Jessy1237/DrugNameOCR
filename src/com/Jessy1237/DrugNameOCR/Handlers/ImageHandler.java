@@ -9,7 +9,7 @@ import org.opencv.core.*;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 
-import com.Jessy1237.DrugNameOCR.BoundingBox;
+import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
 
 public class ImageHandler implements Runnable
 {

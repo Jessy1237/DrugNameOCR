@@ -1,4 +1,4 @@
-package com.Jessy1237.DrugNameOCR;
+package com.Jessy1237.DrugNameOCR.Models;
 
 import java.util.ArrayList;
 import java.util.Collection;
