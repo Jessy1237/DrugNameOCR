@@ -16,7 +16,7 @@ public class RegionOfInterest
     {
         main = new BoundingBox();
         pair = null;
-        rst = RestSearchType.WORD;
+        rst = RestSearchType.WORDS;
         id = " ";
     }
 
