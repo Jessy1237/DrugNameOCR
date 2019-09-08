@@ -9,8 +9,10 @@ import java.util.List;
 
 import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
 import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
+import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
+import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.DrugTUIs;
+import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.RestSearchType;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
-import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -26,43 +28,69 @@ public class Util
 
     }
 
-    /**
-     * Returns the closest match found test result to the original word found within the json string from a rest search get. If the similarity is below 50% then it will return null.
-     * 
-     * @param word The word used to find the rest search result
-     * @param jsonString The json string to parse
-     * @return The first search result or null if no search results found
-     * @throws JsonException if the json string is invalid
-     */
-    public SearchResult getRestSearchResult( String word, String jsonString ) throws JsonException
+    public List<String[]>[] findAllDrugNames( UMLSManager um, String[] lines, RestSearchType rst )
     {
-        JsonObject jo = ( JsonObject ) Jsoner.deserialize( jsonString );
-        jo = ( JsonObject ) jo.get( "result" );
+        @SuppressWarnings( "unchecked" )
+        List<String[]>[] drugNames = new ArrayList[lines.length];
 
-        JsonArray ja = ( JsonArray ) jo.get( "results" );
-        Iterator<?> itr = ja.iterator();
-        SearchResult sr = null;
-        double sim = 50.0;
-        StateWeightedLevenshtein swl = new StateWeightedLevenshtein( this );
-
-        while ( itr.hasNext() )
+        for ( int i = 0; i < lines.length; i++ )
         {
-            jo = ( JsonObject ) itr.next();
+            String line = lines[i];
 
-            if ( !( ( ( String ) jo.get( "ui" ) ).equalsIgnoreCase( "NONE" ) || ( ( String ) jo.get( "name" ) ).equalsIgnoreCase( "NO RESULTS" ) ) )
+            drugNames[i] = new ArrayList<String[]>();
+            if ( rst == RestSearchType.EXACT || rst == RestSearchType.WORDS )
             {
-                SearchResult temp = new SearchResult( jo );
-                double tempSim = swl.similarityPercentage( word, temp.getName() );
-
-                if ( tempSim > sim )
+                for ( String word : line.split( " " ) )
                 {
-                    sim = tempSim;
-                    sr = temp;
+                    SearchResult sr = um.findDrugInformation( word, rst );
+
+                    if ( sr != null )
+                    {
+                        List<String> tuis = um.findSemanticTUIs( sr.getUi() );
+                        boolean isDrug = false;
+
+                        for ( String tui : tuis )
+                        {
+                            if ( DrugTUIs.contains( tui ) )
+                            {
+                                isDrug = true;
+                            }
+                        }
+
+                        if ( isDrug )
+                        {
+                            drugNames[i].add( new String[] { sr.getClosestWordInLine(), sr.getName() } );
+                        }
+                    }
                 }
             }
+            else
+            {
+                SearchResult sr = um.findDrugInformation( line, rst );
+
+                if ( sr != null )
+                {
+                    List<String> tuis = um.findSemanticTUIs( sr.getUi() );
+                    boolean isDrug = false;
+
+                    for ( String tui : tuis )
+                    {
+                        if ( DrugTUIs.contains( tui ) )
+                        {
+                            isDrug = true;
+                        }
+                    }
+
+                    if ( isDrug )
+                    {
+                        drugNames[i].add( new String[] { sr.getClosestWordInLine(), sr.getName() } );
+                    }
+                }
+            }
+
         }
 
-        return sr;
+        return drugNames;
     }
 
     /**

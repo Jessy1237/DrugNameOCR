@@ -9,8 +9,31 @@ public class SearchResult
     private String name;
     private String uri;
     private String rootSource;
+    private String closestWordInLine;
 
+    /**
+     * Builds a SearchResult from the json object representation
+     * 
+     * @param jo The json object that represents the search result
+     */
     public SearchResult( JsonObject jo )
+    {
+        ui = ( String ) jo.get( "ui" );
+        rootSource = ( String ) jo.get( "rootSource" );
+        uri = ( String ) jo.get( "uri" );
+        name = ( String ) jo.get( "name" );
+
+        if ( ui == null || rootSource == null || uri == null || name == null )
+            throw new IllegalArgumentException( "Bad Json String, was unable to fill the SearchResult" );
+    }
+
+    /**
+     * Builds the search reseult from the json object but also sets the closestWordInLine variable
+     * 
+     * @param jo The json object to build the search result from
+     * @param closestWordInLine Generally is the word used to search for the json object to start with
+     */
+    public SearchResult( JsonObject jo, String closestWordInLine )
     {
         ui = ( String ) jo.get( "ui" );
         rootSource = ( String ) jo.get( "rootSource" );
@@ -45,6 +68,18 @@ public class SearchResult
         return this.rootSource;
     }
 
+    public String getClosestWordInLine()
+    {
+        if ( closestWordInLine == null )
+        {
+            return name;
+        }
+        else
+        {
+            return closestWordInLine;
+        }
+    }
+
     public void setUi( String ui )
     {
 
@@ -67,5 +102,10 @@ public class SearchResult
     {
 
         this.rootSource = rootSource;
+    }
+
+    public void setClosestWordInLine( String closestWordInLine )
+    {
+        this.closestWordInLine = closestWordInLine;
     }
 }

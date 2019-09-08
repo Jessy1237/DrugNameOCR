@@ -3,15 +3,15 @@ package com.Jessy1237.DrugNameOCR;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.RestSearchType;
 import com.github.cliftonlabs.json_simple.JsonException;
 
-public class UMLSRestAPITest
+public class FindAllDrugInformationTest
 {
-
     public static void main( String[] args ) throws JsonException, IOException
     {
         if ( args.length != 2 )
@@ -24,6 +24,7 @@ public class UMLSRestAPITest
             UMLSManager um = new UMLSManager( args[0], util );
             BufferedReader br = new BufferedReader( new FileReader( args[1] ) );
             String line = br.readLine();
+            ArrayList<String> lines = new ArrayList<String>();
 
             while ( line != null )
             {
@@ -33,22 +34,31 @@ public class UMLSRestAPITest
                     continue;
                 }
 
-                for ( String word : line.split( " " ) )
-                {
-                    SearchResult result = um.findDrugInformation( word, RestSearchType.APPROXIMATE );
-
-                    if ( result == null )
-                    {
-                        System.out.println( "no results found" );
-                    }
-                    else
-                    {
-                        System.out.println( "Associated Name: " + result.getName() );
-                        System.out.println( "CUI: " + result.getUi() );
-                        System.out.println( "Associated TUIs: " + um.findSemanticTUIs( result.getUi() ) );
-                    }
-                }
+                lines.add( line );
                 line = br.readLine();
+            }
+
+            String[] linesArray = new String[lines.size()];
+            linesArray = lines.toArray( linesArray );
+
+            List<String[]>[] drugNames = util.findAllDrugNames( um, linesArray, RestSearchType.WORDS );
+
+            for ( int i = 0; i < drugNames.length; i++ )
+            {
+                System.out.print( "At line " + i + " found the following drugs ('<name>':'<associated name>'): " );
+                if ( drugNames[i].size() == 0 )
+                {
+                    System.out.println( "NOTHING" );
+                }
+                else
+                {
+                    System.out.println();
+                }
+
+                for ( String[] names : drugNames[i] )
+                {
+                    System.out.println( "'" + names[0] + "':'" + names[1] + "'" );
+                }
             }
 
             br.close();
