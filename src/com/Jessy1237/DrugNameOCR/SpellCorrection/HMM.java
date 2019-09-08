@@ -1,4 +1,4 @@
-package com.Jessy1237.DrugNameOCR;
+package com.Jessy1237.DrugNameOCR.SpellCorrection;
 
 import java.io.BufferedReader;
 import java.io.File;

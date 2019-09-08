@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -486,6 +487,27 @@ public class Util
         public String[] getCorruptions()
         {
             return this.corruptions;
+        }
+
+        /**
+         * This method determines whether the supplied string is a valid corruption of this CharacterCorruption. This is used in the weighted Levenshtein distance calculation as valid character
+         * corruptions will be weighted less in the spell corrections.
+         * 
+         * @param s The string to compare to the corruptions array
+         * @return true if the string is in the corruptions array otherwise false
+         */
+        public boolean containsCorruption( String s )
+        {
+            boolean contains = false;
+            for ( String corruption : corruptions )
+            {
+                if ( corruption.equalsIgnoreCase( s ) )
+                {
+                    contains = true;
+                }
+            }
+
+            return contains;
         }
 
         /**

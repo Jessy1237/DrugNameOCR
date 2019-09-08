@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Random;
 
+import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
 import com.Jessy1237.DrugNameOCR.Util.CharacterCorruption;
 
 public class HMMGenerationTest
