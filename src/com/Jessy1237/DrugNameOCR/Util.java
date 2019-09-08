@@ -13,6 +13,7 @@ import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.DrugTUIs;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.RestSearchType;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -149,6 +150,9 @@ public class Util
 
             out += correctedWord + " ";
         }
+
+        if ( new StateWeightedLevenshtein( this ).similarityPercentage( ocrResult.toLowerCase(), out.trim() ) < 70.0f ) //If less than 70% similarity after spell correction then keep the original ocr result TODO: Investigate a better similarity cutoff
+            return ocrResult;
 
         return out.trim();
     }
