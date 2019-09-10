@@ -16,6 +16,7 @@ import com.Jessy1237.DrugNameOCR.Models.Model;
 import com.Jessy1237.DrugNameOCR.Models.ModelManager;
 import com.Jessy1237.DrugNameOCR.Models.RegionOfInterest;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
+import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.RestSearchType;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.SpellCorrectionMap;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
@@ -23,7 +24,7 @@ import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
 public class DrugNameOCR
 {
 
-    private final static int MIN_NUM_ARGS = 6;
+    private final static int MIN_NUM_ARGS = 7;
     private final static String SPELLING_ADDITION = "SA";
     private final static String CANDIDATE_CHECK = "CC";
     private final static String OCR = "OCR";
@@ -83,7 +84,7 @@ public class DrugNameOCR
             StateWeightedLevenshtein swl = new StateWeightedLevenshtein( util );
             for ( int i = 1; i < args.length; i++ )
             {
-                sims[i-1] = swl.similarityPercentage( args[0], args[i] );
+                sims[i - 1] = swl.similarityPercentage( args[0], args[i] );
             }
 
             try
@@ -107,12 +108,12 @@ public class DrugNameOCR
         if ( args.length < MIN_NUM_ARGS )
         {
             System.out
-                    .println( "Need at least 6 arguments to run. You can have multiple of the two minimum arguments to allow for multiple images to be processed in one execution.\nMinimum Arguments: <exec type> \"<models directory>\" \"<HMM path>\" \"<SpellCorrectionsMap path\" \"<UMLS API key>\" <handler specifier> -I=\"<image path>\"\nFor Example:OCR \"models/\" \"DrugName.hmm\" \"key\" -AG -I=\"C:\\img.jpg\"" );
+                    .println( "Need at least 6 arguments to run. You can have multiple of the two minimum arguments to allow for multiple images to be processed in one execution.\nMinimum Arguments: <exec type> \"<models directory>\" \"<HMM path>\" \"<SpellCorrectionsMap path\" \"<UMLS API key>\" \"<path to google credentials json>\" <handler specifier> -I=\"<image path>\"\nFor Example:OCR \"models/\" \"DrugName.hmm\" \"key\" -AG -I=\"C:\\img.jpg\"" );
         }
         else
         {
             Util util = new Util();
-            HashMap<String, List<String>> ocrRequests = util.parseArgumentsToStrings( Arrays.copyOfRange( args, MIN_NUM_ARGS - 3, args.length ) );
+            HashMap<String, List<String>> ocrRequests = util.parseArgumentsToStrings( Arrays.copyOfRange( args, 5, args.length ) );
 
             if ( ocrRequests.isEmpty() )
             {
@@ -143,87 +144,30 @@ public class DrugNameOCR
                             System.out.println( "Readying img '" + path + "'......" );
                             ih.run();
 
-                            System.out.println( "Finding bounding boxes....." );
-                            List<BoundingBox> combined = util.combineOverlapBB( ih.findBindingBoxes( ih.getCurrentImage() ), ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) ); //have the combination tolerance as 1.5% of the image width and 1.0% for the image height
-
-                            System.out.println( "Finding the best model....." );
-                            Model m = mm.findBestModel( combined, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
-
-                            if ( m == null )
+                            if ( specifier.startsWith( "-A" ) ) //Automic Cropping
                             {
-                                System.out.println( "No viable model was found....." );
+                                System.out.println( "Finding bounding boxes....." );
+                                List<BoundingBox> combined = util.combineOverlapBB( ih.findBindingBoxes( ih.getCurrentImage() ), ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) ); //have the combination tolerance as 1.5% of the image width and 1.0% for the image height
+
+                                System.out.println( "Finding the best model....." );
+                                Model m = mm.findBestModel( combined, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
+
+                                if ( m == null )
+                                {
+                                    System.out.println( "No viable model was found....." );
+                                    util.writeNoModelFound( ih.getImageName() );
+                                }
+                                else
+                                {
+                                    System.out.println( "Found best model as '" + m.getId() + "'" );
+                                    processOCRText( util, mm, hmm, map, um, specifier, ih, m, args[4] );
+                                }
                             }
-                            else
+                            else if ( specifier.startsWith( "-M" ) ) //Manual Cropping
                             {
-                                System.out.println( "Found best model as '" + m.getId() + "'" );
-
-                                OCRHandler ocrh = OCRHandlerFactory.createOCRHandler( specifier, ih, m );
-                                System.out.println( "Finding ocr text and spell correcting....." );
-                                ocrh.run();
-
-                                //roi X bb X lines
-                                String[][][] text = new String[m.getRegionOfInterests().size()][][];
-                                //roi x bb x lines x word
-                                double[][][][] sims = new double[m.getRegionOfInterests().size()][][][];
-
-                                for ( int i = 0; i < m.getRegionOfInterests().size(); i++ )
-                                {
-                                    RegionOfInterest roi = m.getRegionOfInterests().get( i );
-
-                                    text[i] = ocrh.getTextFromROIs().get( roi.getId() );
-                                    sims[i] = new double[text[i].length][][];
-                                    sims[i][0] = util.spellCorrectOCRLines( hmm, text[i][0], map );
-
-                                    if ( text[i].length == 2 )
-                                    {
-                                        sims[i][1] = util.spellCorrectOCRLines( hmm, text[i][1], map );
-                                    }
-                                }
-
-                                System.out.println( "Locating drug names....." );
-                                //roi x lines x wordInLine x NameType
-                                String[][][][] drugNames = new String[m.getRegionOfInterests().size()][][][];
-                                for ( int i = 0; i < m.getRegionOfInterests().size(); i++ )
-                                {
-                                    RegionOfInterest roi = m.getRegionOfInterests().get( i );
-                                    System.out.println( "Finding Drug Names in roi '" + roi.getId() + "'" );
-                                    List<String[]>[] tempDrugNames = util.findAllDrugNames( um, text[i][0], roi.getRestSearchType() );
-
-                                    drugNames[i] = new String[text[i][0].length][][];
-                                    for ( int j = 0; j < text[i][0].length; j++ )
-                                    {
-                                        drugNames[i][j] = new String[tempDrugNames[j].size()][];
-                                        for ( int k = 0; k < tempDrugNames[j].size(); k++ )
-                                        {
-                                            drugNames[i][j][k] = tempDrugNames[j].get( k );
-                                        }
-                                    }
-                                }
-
-                                System.out.println( "Writing OCR Results to file....." );
-                                util.writeResultsToFile( m, text, sims, drugNames, ih.getImageName() );
-
-                                System.out.println( "----------------------------------------OCR TEXT----------------------------------------" );
-                                for ( int i = 0; i < m.getRegionOfInterests().size(); i++ )
-                                {
-                                    for ( int j = 0; j < text[i][0].length; j++ )//Assuming paired box has same number of lines as the main box
-                                    {
-                                        System.out.println( "line " + j + " main text bb: " + text[i][0][j] );
-                                        System.out.print( "Found the following drug names '<text name>':'<umls name>': " );
-
-                                        for ( int k = 0; k < drugNames[i][j].length; k++ )
-                                        {
-                                            System.out.println( "'" + drugNames[i][j][k][0] + "':'" + drugNames[i][j][k][1] + "' " );
-                                        }
-                                        System.out.print( "\n" );
-
-                                        if ( text.length == 2 )
-                                        {
-                                            System.out.println( "line " + j + " pair text bb: " + text[i][1][j] );
-                                        }
-                                    }
-                                }
-
+                                RegionOfInterest roi = new RegionOfInterest( "Whole Image", new BoundingBox( 0, 0, ih.getCurrentImage().width(), ih.getCurrentImage().height(), "Whole Image" ), null, RestSearchType.WORDS );
+                                Model m = new Model( "NO MODEL", roi, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
+                                processOCRText( util, mm, hmm, map, um, specifier, ih, m, args[4] );
                             }
                         }
                     }
@@ -236,4 +180,55 @@ public class DrugNameOCR
             }
         }
     }
+
+    public static void processOCRText( Util util, ModelManager mm, HMM hmm, SpellCorrectionMap map, UMLSManager um, String specifier, ImageHandler ih, Model m, String googleCredentialsPath ) throws FileNotFoundException
+    {
+
+        OCRHandler ocrh = OCRHandlerFactory.createOCRHandler( specifier, ih, m, googleCredentialsPath );
+        System.out.println( "Finding ocr text and spell correcting....." );
+        ocrh.run();
+
+        //roi X bb X lines
+        String[][][] text = new String[m.getRegionOfInterests().size()][][];
+        //roi x bb x lines x word
+        double[][][][] sims = new double[m.getRegionOfInterests().size()][][][];
+
+        for ( int i = 0; i < m.getRegionOfInterests().size(); i++ )
+        {
+            RegionOfInterest roi = m.getRegionOfInterests().get( i );
+
+            text[i] = ocrh.getTextFromROIs().get( roi.getId() );
+            sims[i] = new double[text[i].length][][];
+            sims[i][0] = util.spellCorrectOCRLines( hmm, text[i][0], map );
+
+            if ( text[i].length == 2 )
+            {
+                sims[i][1] = util.spellCorrectOCRLines( hmm, text[i][1], map );
+            }
+        }
+
+        System.out.println( "Locating drug names....." );
+        //roi x lines x wordInLine x NameType
+        String[][][][] drugNames = new String[m.getRegionOfInterests().size()][][][];
+        for ( int i = 0; i < m.getRegionOfInterests().size(); i++ )
+        {
+            RegionOfInterest roi = m.getRegionOfInterests().get( i );
+            System.out.println( "Finding Drug Names in roi '" + roi.getId() + "'" );
+            List<String[]>[] tempDrugNames = util.findAllDrugNames( um, text[i][0], roi.getRestSearchType() );
+
+            drugNames[i] = new String[text[i][0].length][][];
+            for ( int j = 0; j < text[i][0].length; j++ )
+            {
+                drugNames[i][j] = new String[tempDrugNames[j].size()][];
+                for ( int k = 0; k < tempDrugNames[j].size(); k++ )
+                {
+                    drugNames[i][j][k] = tempDrugNames[j].get( k );
+                }
+            }
+        }
+
+        System.out.println( "Writing OCR Results to file....." );
+        util.writeResultsToFile( m, text, sims, drugNames, ih.getImageName() );
+    }
+
 }

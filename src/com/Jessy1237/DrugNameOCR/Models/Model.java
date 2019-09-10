@@ -26,6 +26,15 @@ public class Model
         height = -1;
     }
 
+    public Model( String id, RegionOfInterest roi, int width, int height )
+    {
+        this.id = id;
+        rois = new ArrayList<RegionOfInterest>();
+        rois.add( roi );
+        this.width = width;
+        this.height = height;
+    }
+
     public Model( String id, List<BoundingBox> boxes, List<RegionOfInterest> rois, int width, int height )
     {
         this.id = id;

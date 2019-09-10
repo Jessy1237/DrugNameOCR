@@ -332,6 +332,26 @@ public class Util
     }
 
     /**
+     * This method writes that no suitable model was found to the result json file for the image
+     * 
+     * @param imgName The name of the image being processed
+     * @throws FileNotFoundException
+     */
+    public void writeNoModelFound( String imgName ) throws FileNotFoundException
+    {
+        JsonObject jo = new JsonObject();
+        jo.put( "img", imgName );
+        jo.put( "results", "NO MODEL FOUND" );
+
+        //Save the JSON to file
+        String output = Jsoner.prettyPrint( jo.toJson() );
+        PrintWriter pw = new PrintWriter( imgName + ".result" );
+        pw.write( output );
+        pw.flush();
+        pw.close();
+    }
+
+    /**
      * Writes the results of the candidate check to a json file. "<original word>.result"
      * 
      * @param words The array of words from the command line. With index 0 being the original word.
@@ -348,7 +368,7 @@ public class Util
         {
             JsonObject candidate = new JsonObject();
             candidate.put( "Candidate Word", words[i] );
-            candidate.put( "Similarity", sims[i-1] );
+            candidate.put( "Similarity", sims[i - 1] );
 
             results.add( candidate );
         }

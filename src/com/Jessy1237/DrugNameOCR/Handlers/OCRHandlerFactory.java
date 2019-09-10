@@ -8,7 +8,7 @@ public class OCRHandlerFactory
     private final static String TESSERACT = "-AT";
     private final static String GOOGLE = "-MG";
 
-    public static OCRHandler createOCRHandler( String specifier, ImageHandler ih, Model m ) throws IllegalArgumentException
+    public static OCRHandler createOCRHandler( String specifier, ImageHandler ih, Model m, String credentials ) throws IllegalArgumentException
     {
         OCRHandler ocrh = null;
         if ( specifier.isEmpty() )
@@ -22,7 +22,7 @@ public class OCRHandlerFactory
         }
         else if ( specifier.equalsIgnoreCase( GOOGLE ) )
         {
-
+            ocrh = new GoogleOCRHandler( ih, m, credentials );
         }
         else
         {

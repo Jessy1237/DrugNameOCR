@@ -43,7 +43,7 @@ class TesseractOCRHandler extends OCRHandler
         String outputString = "";
         try
         {
-            outputString = outText.getString( "UTF-8" );
+            outputString = outText.getString( "UTF-8" ).toLowerCase();
         }
         catch ( UnsupportedEncodingException e )
         {
