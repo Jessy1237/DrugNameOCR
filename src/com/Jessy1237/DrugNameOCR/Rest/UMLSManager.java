@@ -40,7 +40,7 @@ public class UMLSManager
         String tempURI = RestAssured.baseURI;
         RestAssured.baseURI = "https://uts-ws.nlm.nih.gov";
 
-        Response response = given().request().with().param( "ticket", ticketClient.getST( tgt ) ).param( "string", word ).param( "inputType", "atom" ).param( "sabs", "AOD,DRUGBANK,VANDF,GS" ).param( "pageSize", "3" ).param( "searchType", rst.name().toLowerCase() ).when()
+        Response response = given().request().with().param( "ticket", ticketClient.getST( tgt ) ).param( "string", word ).param( "inputType", "atom" ).param( "sabs", "AOD,CHV,NCI,PDQ,MED-RT,MMSL" ).param( "pageSize", "3" ).param( "searchType", rst.name().toLowerCase() ).when()
                 .get( "/rest/search/current" );
 
         if ( response.getStatusCode() == 200 )
@@ -118,25 +118,26 @@ public class UMLSManager
             if ( !( ( ( String ) jo.get( "ui" ) ).equalsIgnoreCase( "NONE" ) || ( ( String ) jo.get( "name" ) ).equalsIgnoreCase( "NO RESULTS" ) ) )
             {
                 SearchResult temp = new SearchResult( jo );
-                temp.setClosestWordInLine( word );
                 double tempSim = 0.0;
                 if ( word.contains( " " ) )
                 {
-                    for ( String tempWord : word.split( " " ) )
+                    String[] split = word.split( " " );
+                    for ( int i = 0; i < split.length; i++ )
                     {
-                        double tempSimWord = swl.similarityPercentage( tempWord, temp.getName() );
+                        double tempSimWord = swl.similarityPercentage( split[i], temp.getName() );
                         if ( tempSimWord > tempSim )
                         {
                             tempSim = tempSimWord;
-                            temp.setClosestWordInLine( tempWord );
+                            temp.setClosestWordInLineIndex( i );
                         }
                     }
                 }
                 else
                 {
                     tempSim = swl.similarityPercentage( word, temp.getName() );
+                    temp.setSimilarity( tempSim );
                 }
-                
+
                 if ( tempSim > sim )
                 {
                     sim = tempSim;

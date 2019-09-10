@@ -39,7 +39,7 @@ public class SpellCorrectionTest
 
                     String incorrectWord = line.split( " " )[0].toLowerCase();
                     String correctWord = line.split( " " )[1].toLowerCase();
-                    String correctedWord = util.spellCorrectOCRResult( hmm, incorrectWord );
+                    String correctedWord = util.spellCorrectOCRResult( hmm, incorrectWord ).split( "`" )[0];
 
                     System.out.println( incorrectWord + ", " + correctedWord + ", " + correctWord );
 

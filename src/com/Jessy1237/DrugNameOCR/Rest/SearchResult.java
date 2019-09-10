@@ -9,7 +9,8 @@ public class SearchResult
     private String name;
     private String uri;
     private String rootSource;
-    private String closestWordInLine;
+    private int closestWordInLineIndex;
+    private double sim;
 
     /**
      * Builds a SearchResult from the json object representation
@@ -22,6 +23,7 @@ public class SearchResult
         rootSource = ( String ) jo.get( "rootSource" );
         uri = ( String ) jo.get( "uri" );
         name = ( String ) jo.get( "name" );
+        closestWordInLineIndex = -1;
 
         if ( ui == null || rootSource == null || uri == null || name == null )
             throw new IllegalArgumentException( "Bad Json String, was unable to fill the SearchResult" );
@@ -33,12 +35,13 @@ public class SearchResult
      * @param jo The json object to build the search result from
      * @param closestWordInLine Generally is the word used to search for the json object to start with
      */
-    public SearchResult( JsonObject jo, String closestWordInLine )
+    public SearchResult( JsonObject jo, int closestWordInLineIndex )
     {
         ui = ( String ) jo.get( "ui" );
         rootSource = ( String ) jo.get( "rootSource" );
         uri = ( String ) jo.get( "uri" );
         name = ( String ) jo.get( "name" );
+        this.closestWordInLineIndex = closestWordInLineIndex;
 
         if ( ui == null || rootSource == null || uri == null || name == null )
             throw new IllegalArgumentException( "Bad Json String, was unable to fill the SearchResult" );
@@ -68,16 +71,14 @@ public class SearchResult
         return this.rootSource;
     }
 
-    public String getClosestWordInLine()
+    public int getClosestWordInLineIndex()
     {
-        if ( closestWordInLine == null )
-        {
-            return name;
-        }
-        else
-        {
-            return closestWordInLine;
-        }
+        return closestWordInLineIndex;
+    }
+
+    public double getSimilarity()
+    {
+        return sim;
     }
 
     public void setUi( String ui )
@@ -104,8 +105,13 @@ public class SearchResult
         this.rootSource = rootSource;
     }
 
-    public void setClosestWordInLine( String closestWordInLine )
+    public void setClosestWordInLineIndex( int closestWordInLineIndex )
     {
-        this.closestWordInLine = closestWordInLine;
+        this.closestWordInLineIndex = closestWordInLineIndex;
+    }
+
+    public void setSimilarity( double sim )
+    {
+        this.sim = sim;
     }
 }

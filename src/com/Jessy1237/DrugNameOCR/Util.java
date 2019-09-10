@@ -1,5 +1,7 @@
 package com.Jessy1237.DrugNameOCR;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -8,6 +10,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import com.Jessy1237.DrugNameOCR.Models.BoundingBox;
+import com.Jessy1237.DrugNameOCR.Models.Model;
+import com.Jessy1237.DrugNameOCR.Models.RegionOfInterest;
 import com.Jessy1237.DrugNameOCR.Rest.SearchResult;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.DrugTUIs;
@@ -29,6 +33,14 @@ public class Util
 
     }
 
+    /**
+     * Finds all the drug names in the given lines and stores them into a list of drug names in an array.
+     * 
+     * @param um The UMLSManager to search the UMLS rest api for the drug names
+     * @param lines The array of lines to search for drug names within
+     * @param rst The rest search type method to search with.
+     * @return An array of lists that contain and len 2 array of each drug name and associated umls name found within that line
+     */
     public List<String[]>[] findAllDrugNames( UMLSManager um, String[] lines, RestSearchType rst )
     {
         @SuppressWarnings( "unchecked" )
@@ -41,9 +53,10 @@ public class Util
             drugNames[i] = new ArrayList<String[]>();
             if ( rst == RestSearchType.EXACT || rst == RestSearchType.WORDS )
             {
-                for ( String word : line.split( " " ) )
+                String[] split = line.split( " " );
+                for ( int j = 0; j < split.length; j++ )
                 {
-                    SearchResult sr = um.findDrugInformation( word, rst );
+                    SearchResult sr = um.findDrugInformation( split[j], rst );
 
                     if ( sr != null )
                     {
@@ -60,7 +73,7 @@ public class Util
 
                         if ( isDrug )
                         {
-                            drugNames[i].add( new String[] { sr.getClosestWordInLine(), sr.getName() } );
+                            drugNames[i].add( new String[] { j + "", sr.getName() + "`" + sr.getSimilarity() } );
                         }
                     }
                 }
@@ -84,7 +97,7 @@ public class Util
 
                     if ( isDrug )
                     {
-                        drugNames[i].add( new String[] { sr.getClosestWordInLine(), sr.getName() } );
+                        drugNames[i].add( new String[] { sr.getClosestWordInLineIndex() + "", sr.getName() + "`" + sr.getSimilarity() } );
                     }
                 }
             }
@@ -122,6 +135,35 @@ public class Util
     }
 
     /**
+     * Spell Corrects every word in every line in the array of string lines and out puts the confidence of the spell correction for each word.
+     * 
+     * @param hmm The spell correction HMM to use to predict the correct spelling.
+     * @param lines The string array containing the lines from an OCR engine. These lines will be spell corrected during the process.
+     * @return The confidence of the spell corrections of each word in an array [line][word]
+     */
+    public double[][] spellCorrectOCRLines( HMM hmm, String[] lines )
+    {
+        double[][] sims = new double[lines.length][];
+        for ( int i = 0; i < lines.length; i++ )
+        {
+            String line = "";
+            String[] lineSplit = lines[i].split( " " );
+            sims[i] = new double[lineSplit.length];
+            for ( int j = 0; j < lineSplit.length; j++ )
+            {
+                String result = spellCorrectOCRResult( hmm, lineSplit[j] );
+                String[] split = result.split( "`" );
+                line += split[0] + " ";
+                sims[i][j] = Double.parseDouble( split[1] );
+            }
+
+            lines[i] = line.trim();
+        }
+
+        return sims;
+    }
+
+    /**
      * Spell corrects the given OCR result string using the supplied spell check HMM. It turns the whole string to lowercase in order to spell correct the words using the HMM.
      * 
      * @param hmm The spell check HMM
@@ -151,10 +193,11 @@ public class Util
             out += correctedWord + " ";
         }
 
-        if ( new StateWeightedLevenshtein( this ).similarityPercentage( ocrResult.toLowerCase(), out.trim() ) < 70.0f ) //If less than 70% similarity after spell correction then keep the original ocr result TODO: Investigate a better similarity cutoff
-            return ocrResult;
+        double sim = new StateWeightedLevenshtein( this ).similarityPercentage( ocrResult.toLowerCase(), out.trim() );
+        if ( sim < 70.0f ) //If less than 70% similarity after spell correction then keep the original ocr result TODO: Investigate a better similarity cutoff
+            return ocrResult + "`-1";
 
-        return out.trim();
+        return out.trim() + "`" + sim;
     }
 
     /**
@@ -195,6 +238,84 @@ public class Util
         }
 
         return strings;
+    }
+
+    /**
+     * Writes the given OCR results and recognised drug names for the given model and image to a JSON file. The json file will be in "<img name>.result"
+     * 
+     * @param m The model used to find the text
+     * @param text The text array holding the OCR result. [roi index][bb index][line index]
+     * @param sims The double array holding the spelling confidence of each word [roi index][bb index][line index][word index]
+     * @param drugNames The drug names found from the associated text array/ [roi index][line index][word index][ocr word index or umls associated word]
+     * @param imgName The name of the image that the OCR results are from
+     * @throws FileNotFoundException
+     */
+    public void writeResultsToFile( Model m, String[][][] text, double[][][][] sims, String[][][][] drugNames, String imgName ) throws FileNotFoundException
+    {
+        //Creating the json file object represenation
+        JsonObject jo = new JsonObject();
+        jo.put( "model", m.getId() );
+        jo.put( "img", imgName );
+
+        //Create our list of rois
+        JsonArray jaRois = new JsonArray();
+        for ( int i = 0; i < m.getRegionOfInterests().size(); i++ )
+        {
+            //Create our roi json object
+            JsonObject joRoi = new JsonObject();
+            RegionOfInterest roi = m.getRegionOfInterests().get( i );
+            joRoi.put( "RegionOfInterest", roi.getId() );
+
+            //Create our list of lines
+            JsonArray jaLines = new JsonArray();
+            for ( int j = 0; j < text[i][0].length; j++ )
+            {
+                //Create our line json object
+                JsonObject joLine = new JsonObject();
+                joLine.put( "lineNumber", "" + j );
+                joLine.put( "Main BB lineText", text[i][0][j] );
+
+                //Add the found drug names in this current line
+                JsonArray jaDrugNames = new JsonArray();
+                for ( int k = 0; k < drugNames[i][j].length; k++ )
+                {
+                    JsonObject joDrugName = new JsonObject();
+
+                    int wordIndex = Integer.parseInt( drugNames[i][j][k][0] ); //Get the word index from the string represenation of the integer
+
+                    String[] split = text[i][0][j].split( " " );
+                    joDrugName.put( "name", split[wordIndex] ); // put the word in
+                    joDrugName.put( "name spelling confidence", sims[i][0][j][wordIndex] ); //put in the spelling confidence
+
+                    split = drugNames[i][j][k][1].split( "`" );
+                    joDrugName.put( "associated name", split[0] );
+                    joDrugName.put( "Similarity to Associated name", split[1] );
+
+                    jaDrugNames.add( joDrugName );
+                }
+                joLine.put( "Drug Names", jaDrugNames );
+
+                //If the length is 2 then we know to add the pair bounding box line text. i.e. possible gp instructions in pair bb.
+                if ( text[i].length == 2 )
+                {
+                    joLine.put( "Pair BB lineText", text[i][1][j] );
+                }
+
+                jaLines.add( joLine );
+            }
+
+            joRoi.put( "Lines", jaLines );
+            jaRois.add( joRoi );
+        }
+
+        jo.put( "results", jaRois );
+
+        //Save the JSON to file
+        String output = Jsoner.prettyPrint( jo.toJson() );
+        PrintWriter pw = new PrintWriter( imgName + ".result" );
+        pw.write( output );
+        pw.flush();
+        pw.close();
     }
 
     /**
@@ -474,9 +595,9 @@ public class Util
     {
         a( "a", new String[] { "o", "e", "u" } ),
         b( "b", new String[] { "o", "3", "6", "8", "lo", "la" } ),
-        c( "c", new String[] { "e" } ),
+        c( "c", new String[] {} ),
         d( "d", new String[] { "ol", "al", "cl" } ),
-        e( "e", new String[] { "o", "c" } ),
+        e( "e", new String[] { "o", "a" } ),
         f( "f", new String[] { "t" } ),
         g( "g", new String[] { "j", "q", "9", "y" } ),
         h( "h", new String[] { "n", "m" } ),
@@ -486,9 +607,9 @@ public class Util
         l( "l", new String[] { "i", "1", "!" } ),
         m( "m", new String[] { "n", "h", "i" } ),
         n( "n", new String[] { "m", "h" } ),
-        o( "o", new String[] { "a", "0" } ),
+        o( "o", new String[] { "a", "0", "q" } ),
         p( "p", new String[] { "o" } ),
-        q( "q", new String[] { "g", "y", "9" } ),
+        q( "q", new String[] { "g", "y", "9", "o" } ),
         r( "r", new String[] { "i" } ),
         s( "s", new String[] { "5", "$" } ),
         t( "t", new String[] { "i", "-", "f", "7", "+" } ),
