@@ -1,6 +1,7 @@
 package com.Jessy1237.DrugNameOCR;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -16,26 +17,102 @@ import com.Jessy1237.DrugNameOCR.Models.ModelManager;
 import com.Jessy1237.DrugNameOCR.Models.RegionOfInterest;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.SpellCorrectionMap;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
 
 public class DrugNameOCR
 {
 
-    private final static int MIN_NUM_ARGS = 5;
+    private final static int MIN_NUM_ARGS = 6;
+    private final static String SPELLING_ADDITION = "SA";
+    private final static String CANDIDATE_CHECK = "CC";
+    private final static String OCR = "OCR";
 
     public static void main( String[] args )
     {
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
 
-        Util util = new Util();
-
-        if ( args.length < MIN_NUM_ARGS )
+        if ( args.length == 0 )
         {
-            System.out
-                    .println( "Need at least five arguments to run. You can have multiple of the two minimum arguments to allow for multiple images to be processed in one execution.\nMinimum Arguments: \"<models directory>\" \"<HMM path>\" \"<UMLS API key>\" <handler specifier> -I=\"<image path>\"\nFor Example: \"models/\" -AG -I=\"C:\\img.jpg\"" );
+            System.out.println( "Not enough arguments. Need at least an execution type argument. i.e. SA, CC or OCR" );
         }
         else
         {
-            HashMap<String, List<String>> ocrRequests = util.parseArgumentsToStrings( Arrays.copyOfRange( args, MIN_NUM_ARGS - 2, args.length ) );
+            if ( args[0].equalsIgnoreCase( SPELLING_ADDITION ) )
+            {
+                executeSpellingAddition( Arrays.copyOfRange( args, 1, args.length ) );
+            }
+            else if ( args[0].equalsIgnoreCase( CANDIDATE_CHECK ) )
+            {
+                executeCandidateCheck( Arrays.copyOfRange( args, 1, args.length ) );
+            }
+            else if ( args[0].equalsIgnoreCase( OCR ) )
+            {
+                executeOCR( Arrays.copyOfRange( args, 1, args.length ) );
+            }
+        }
+    }
+
+    public static void executeSpellingAddition( String[] args )
+    {
+        if ( args.length != 3 )
+        {
+            System.out.println( "Min Arguments: <exec type> \"<SpellCorrectionMap path>\" <ocr result> <correct spelling>" );
+        }
+        else
+        {
+            System.out.println( "Loading the spell correction map....." );
+            SpellCorrectionMap map = new SpellCorrectionMap( args[0] );
+            System.out.println( "Adding '" + args[2] + "' as correct spelling for '" + args[1] + "' to the map" );
+            map.addNewSpellCorrection( args[1], args[2] );
+            System.out.println( "Saving the spell correction map....." );
+            map.save();
+        }
+    }
+
+    public static void executeCandidateCheck( String[] args )
+    {
+        if ( args.length < 2 )
+        {
+            System.out.println( "Arguments: <exec type> <ocr result> <candidate 1> <candidate 2>....." );
+        }
+        else
+        {
+            Util util = new Util();
+            double[] sims = new double[args.length - 1];
+            StateWeightedLevenshtein swl = new StateWeightedLevenshtein( util );
+            for ( int i = 1; i < args.length; i++ )
+            {
+                sims[i-1] = swl.similarityPercentage( args[0], args[i] );
+            }
+
+            try
+            {
+                util.writeCandidateCheckToFile( args, sims );
+            }
+            catch ( FileNotFoundException e )
+            {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * This method executes the OCR path of the program
+     * 
+     * @param args The arguments required for this execution path
+     */
+    public static void executeOCR( String[] args )
+    {
+        if ( args.length < MIN_NUM_ARGS )
+        {
+            System.out
+                    .println( "Need at least 6 arguments to run. You can have multiple of the two minimum arguments to allow for multiple images to be processed in one execution.\nMinimum Arguments: <exec type> \"<models directory>\" \"<HMM path>\" \"<SpellCorrectionsMap path\" \"<UMLS API key>\" <handler specifier> -I=\"<image path>\"\nFor Example:OCR \"models/\" \"DrugName.hmm\" \"key\" -AG -I=\"C:\\img.jpg\"" );
+        }
+        else
+        {
+            Util util = new Util();
+            HashMap<String, List<String>> ocrRequests = util.parseArgumentsToStrings( Arrays.copyOfRange( args, MIN_NUM_ARGS - 3, args.length ) );
 
             if ( ocrRequests.isEmpty() )
             {
@@ -52,8 +129,11 @@ public class DrugNameOCR
                     System.out.println( "Loading HMM....." );
                     HMM hmm = new HMM( new File( args[1] ) );
 
+                    System.out.println( "Loading Spell Corrections map....." );
+                    SpellCorrectionMap map = new SpellCorrectionMap( args[2] );
+
                     System.out.println( "Loading UMLS Rest API....." );
-                    UMLSManager um = new UMLSManager( args[2], util );
+                    UMLSManager um = new UMLSManager( args[3], util );
 
                     for ( String specifier : ocrRequests.keySet() )
                     {
@@ -92,11 +172,11 @@ public class DrugNameOCR
 
                                     text[i] = ocrh.getTextFromROIs().get( roi.getId() );
                                     sims[i] = new double[text[i].length][][];
-                                    sims[i][0] = util.spellCorrectOCRLines( hmm, text[i][0] );
+                                    sims[i][0] = util.spellCorrectOCRLines( hmm, text[i][0], map );
 
                                     if ( text[i].length == 2 )
                                     {
-                                        sims[i][1] = util.spellCorrectOCRLines( hmm, text[i][1] );
+                                        sims[i][1] = util.spellCorrectOCRLines( hmm, text[i][1], map );
                                     }
                                 }
 

@@ -17,6 +17,7 @@ import com.Jessy1237.DrugNameOCR.Rest.UMLSManager;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.DrugTUIs;
 import com.Jessy1237.DrugNameOCR.Rest.UMLSManager.RestSearchType;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.HMM;
+import com.Jessy1237.DrugNameOCR.SpellCorrection.SpellCorrectionMap;
 import com.Jessy1237.DrugNameOCR.SpellCorrection.StateWeightedLevenshtein;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
@@ -139,9 +140,10 @@ public class Util
      * 
      * @param hmm The spell correction HMM to use to predict the correct spelling.
      * @param lines The string array containing the lines from an OCR engine. These lines will be spell corrected during the process.
+     * @param map A mapping of previous correct spell corrections
      * @return The confidence of the spell corrections of each word in an array [line][word]
      */
-    public double[][] spellCorrectOCRLines( HMM hmm, String[] lines )
+    public double[][] spellCorrectOCRLines( HMM hmm, String[] lines, SpellCorrectionMap map )
     {
         double[][] sims = new double[lines.length][];
         for ( int i = 0; i < lines.length; i++ )
@@ -151,10 +153,21 @@ public class Util
             sims[i] = new double[lineSplit.length];
             for ( int j = 0; j < lineSplit.length; j++ )
             {
-                String result = spellCorrectOCRResult( hmm, lineSplit[j] );
-                String[] split = result.split( "`" );
-                line += split[0] + " ";
-                sims[i][j] = Double.parseDouble( split[1] );
+                String result = map.getPreviousSpellCorrection( lineSplit[j] );
+
+                if ( result != null )
+                {
+                    line += result;
+                    sims[i][j] = 100.0;
+                }
+                else
+                {
+                    result = spellCorrectOCRResult( hmm, lineSplit[j] );
+                    String[] split = result.split( "`" );
+                    line += split[0] + " ";
+                    sims[i][j] = Double.parseDouble( split[1] );
+                }
+
             }
 
             lines[i] = line.trim();
@@ -313,6 +326,37 @@ public class Util
         //Save the JSON to file
         String output = Jsoner.prettyPrint( jo.toJson() );
         PrintWriter pw = new PrintWriter( imgName + ".result" );
+        pw.write( output );
+        pw.flush();
+        pw.close();
+    }
+
+    /**
+     * Writes the results of the candidate check to a json file. "<original word>.result"
+     * 
+     * @param words The array of words from the command line. With index 0 being the original word.
+     * @param sims The similarities of each word to the original word
+     * @throws FileNotFoundException
+     */
+    public void writeCandidateCheckToFile( String[] words, double[] sims ) throws FileNotFoundException
+    {
+        JsonObject jo = new JsonObject();
+        jo.put( "Original Word", words[0] );
+        JsonArray results = new JsonArray();
+
+        for ( int i = 1; i < words.length; i++ )
+        {
+            JsonObject candidate = new JsonObject();
+            candidate.put( "Candidate Word", words[i] );
+            candidate.put( "Similarity", sims[i-1] );
+
+            results.add( candidate );
+        }
+        jo.put( "results", results );
+
+        //Save the JSON to file
+        String output = Jsoner.prettyPrint( jo.toJson() );
+        PrintWriter pw = new PrintWriter( words[0] + ".result" );
         pw.write( output );
         pw.flush();
         pw.close();

@@ -1,0 +1,17 @@
+{
+	"Original Word":"acidovir",
+	"results":[
+		{
+			"Similarity":93.75,
+			"Candidate Word":"aciclovir"
+		},
+		{
+			"Similarity":27.27272727272727,
+			"Candidate Word":"amoxycillin"
+		},
+		{
+			"Similarity":37.5,
+			"Candidate Word":"amoxil"
+		}
+	]
+}
