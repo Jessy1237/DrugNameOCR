@@ -343,7 +343,7 @@ public class ImageHandler implements Runnable
         Point[] vertices = new Point[4];
         rotatedRect.points( vertices );
 
-        if ( rotatedRect.size.width > rotatedRect.size.height && inverse.height() > inverse.width() )
+        if ( ( rotatedRect.size.width > rotatedRect.size.height && inverse.height() > inverse.width() ) || ( rotatedRect.size.width < rotatedRect.size.height && inverse.height() < inverse.width() ) )
         {
             rotatedRect.angle += 90.f;
         }
@@ -368,8 +368,30 @@ public class ImageHandler implements Runnable
 
         //Get rotated rect of white pixels
         RotatedRect rect = Imgproc.minAreaRect( mat2f );
+        Rect r = rect.boundingRect();
 
-        return img.submat( rect.boundingRect() );
+        //Sometimes the boundingRect would surpass the dimensions of the image so we are making sure the crop dimensions are within the image dimenions
+        if ( r.x < 0 )
+        {
+            r.x = 0;
+        }
+
+        if ( r.y < 0 )
+        {
+            r.y = 0;
+        }
+
+        if ( r.x + r.width > img.width() )
+        {
+            r.width = img.width() - ( r.x );
+        }
+
+        if ( r.y + r.height > img.height() )
+        {
+            r.height = img.height() - ( r.y );
+        }
+
+        return img.submat( r );
     }
 
     /**
