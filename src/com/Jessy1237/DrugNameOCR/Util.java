@@ -257,13 +257,14 @@ public class Util
      * Writes the given OCR results and recognised drug names for the given model and image to a JSON file. The json file will be in "<img name>.result"
      * 
      * @param m The model used to find the text
-     * @param text The text array holding the OCR result. [roi index][bb index][line index]
+     * @param originalText The text array holding the OCR result. [roi index][bb index][line index]
+     * @param text The text array holding the spell corrected OCR result. [roi index][bb index][line index]
      * @param sims The double array holding the spelling confidence of each word [roi index][bb index][line index][word index]
      * @param drugNames The drug names found from the associated text array/ [roi index][line index][word index][ocr word index or umls associated word]
      * @param imgName The name of the image that the OCR results are from
      * @throws FileNotFoundException
      */
-    public void writeResultsToFile( Model m, String[][][] text, double[][][][] sims, String[][][][] drugNames, String imgName ) throws FileNotFoundException
+    public void writeResultsToFile( Model m, String[][][] originalText, String[][][] text, double[][][][] sims, String[][][][] drugNames, String imgName ) throws FileNotFoundException
     {
         //Creating the json file object represenation
         JsonObject jo = new JsonObject();
@@ -286,7 +287,8 @@ public class Util
                 //Create our line json object
                 JsonObject joLine = new JsonObject();
                 joLine.put( "lineNumber", "" + j );
-                joLine.put( "Main BB lineText", text[i][0][j] );
+                joLine.put( "Main BB original lineText", originalText[i][0][j] );
+                joLine.put( "Main BB corrected lineText", text[i][0][j] );
 
                 //Add the found drug names in this current line
                 JsonArray jaDrugNames = new JsonArray();
@@ -296,9 +298,12 @@ public class Util
 
                     int wordIndex = Integer.parseInt( drugNames[i][j][k][0] ); //Get the word index from the string represenation of the integer
 
-                    String[] split = text[i][0][j].split( " " );
-                    joDrugName.put( "name", split[wordIndex] ); // put the word in
-                    joDrugName.put( "name spelling confidence", sims[i][0][j][wordIndex] ); //put in the spelling confidence
+                    String[] split = originalText[i][0][j].split( " " );
+                    joDrugName.put( "Original OCR name", split[wordIndex] );
+
+                    split = text[i][0][j].split( " " );
+                    joDrugName.put( "corrected name", split[wordIndex] ); // put the word in
+                    joDrugName.put( "corrected name spelling confidence", sims[i][0][j][wordIndex] ); //put in the spelling confidence
 
                     split = drugNames[i][j][k][1].split( "`" );
                     joDrugName.put( "associated name", split[0] );
@@ -311,7 +316,8 @@ public class Util
                 //If the length is 2 then we know to add the pair bounding box line text. i.e. possible gp instructions in pair bb.
                 if ( text[i].length == 2 )
                 {
-                    joLine.put( "Pair BB lineText", text[i][1][j] );
+                    joLine.put( "Pair BB original lineText", originalText[i][1][j] );
+                    joLine.put( "Pair BB corrected lineText", text[i][1][j] );
                 }
 
                 jaLines.add( joLine );

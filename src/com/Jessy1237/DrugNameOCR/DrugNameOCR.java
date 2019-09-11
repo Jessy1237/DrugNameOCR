@@ -144,7 +144,7 @@ public class DrugNameOCR
                             System.out.println( "Readying img '" + path + "'......" );
                             ih.run();
 
-                            if ( specifier.startsWith( "-A" ) ) //Automic Cropping
+                            if ( specifier.startsWith( "-A" ) ) //Automatic Cropping
                             {
                                 System.out.println( "Finding bounding boxes....." );
                                 List<BoundingBox> combined = util.combineOverlapBB( ih.findBindingBoxes( ih.getCurrentImage() ), ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) ); //have the combination tolerance as 1.5% of the image width and 1.0% for the image height
@@ -160,14 +160,14 @@ public class DrugNameOCR
                                 else
                                 {
                                     System.out.println( "Found best model as '" + m.getId() + "'" );
-                                    processOCRText( util, mm, hmm, map, um, specifier, ih, m, args[4] );
+                                    processOCRText( util, hmm, map, um, specifier, ih, m, args[4] );
                                 }
                             }
                             else if ( specifier.startsWith( "-M" ) ) //Manual Cropping
                             {
                                 RegionOfInterest roi = new RegionOfInterest( "Whole Image", new BoundingBox( 0, 0, ih.getCurrentImage().width(), ih.getCurrentImage().height(), "Whole Image" ), null, RestSearchType.WORDS );
                                 Model m = new Model( "NO MODEL", roi, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
-                                processOCRText( util, mm, hmm, map, um, specifier, ih, m, args[4] );
+                                processOCRText( util, hmm, map, um, specifier, ih, m, args[4] );
                             }
                         }
                     }
@@ -181,7 +181,20 @@ public class DrugNameOCR
         }
     }
 
-    public static void processOCRText( Util util, ModelManager mm, HMM hmm, SpellCorrectionMap map, UMLSManager um, String specifier, ImageHandler ih, Model m, String googleCredentialsPath ) throws FileNotFoundException
+    /**
+     * Extracts and Processes the text from the supplied ImageHandler with the given model, spell correction HMM and map, etc.
+     * 
+     * @param util The utility class
+     * @param hmm The spell correction HMM to use on the ocr text
+     * @param map The spell correction map to use on the ocr text
+     * @param um The UMLS Manager to use to find the drug names
+     * @param specifier The specifier for the OCR handler
+     * @param ih The image handler containing the pre-processed image
+     * @param m The model found to suit the image handler
+     * @param googleCredentialsPath The path to the google credentials json file
+     * @throws FileNotFoundException
+     */
+    public static void processOCRText( Util util, HMM hmm, SpellCorrectionMap map, UMLSManager um, String specifier, ImageHandler ih, Model m, String googleCredentialsPath ) throws FileNotFoundException
     {
 
         OCRHandler ocrh = OCRHandlerFactory.createOCRHandler( specifier, ih, m, googleCredentialsPath );
@@ -190,6 +203,7 @@ public class DrugNameOCR
 
         //roi X bb X lines
         String[][][] text = new String[m.getRegionOfInterests().size()][][];
+        String[][][] originalText = new String[m.getRegionOfInterests().size()][][];
         //roi x bb x lines x word
         double[][][][] sims = new double[m.getRegionOfInterests().size()][][][];
 
@@ -197,7 +211,8 @@ public class DrugNameOCR
         {
             RegionOfInterest roi = m.getRegionOfInterests().get( i );
 
-            text[i] = ocrh.getTextFromROIs().get( roi.getId() );
+            originalText[i] = ocrh.getTextFromROIs().get( roi.getId() );
+            text[i] = copyText( originalText[i] );
             sims[i] = new double[text[i].length][][];
             sims[i][0] = util.spellCorrectOCRLines( hmm, text[i][0], map );
 
@@ -228,7 +243,28 @@ public class DrugNameOCR
         }
 
         System.out.println( "Writing OCR Results to file....." );
-        util.writeResultsToFile( m, text, sims, drugNames, ih.getImageName() );
+        util.writeResultsToFile( m, originalText, text, sims, drugNames, ih.getImageName() );
     }
 
+    /**
+     * Copies the text array from the OCR
+     * 
+     * @param originalText The array to copy the text from
+     * @return A copy of the original array with new string objects
+     */
+    private static String[][] copyText( String[][] originalText )
+    {
+        String[][] text = new String[originalText.length][];
+
+        for ( int i = 0; i < originalText.length; i++ )
+        {
+            text[i] = new String[originalText[i].length];
+            for ( int j = 0; j < originalText[i].length; j++ )
+            {
+                text[i][j] = new String( originalText[i][j] );
+            }
+        }
+
+        return text;
+    }
 }
