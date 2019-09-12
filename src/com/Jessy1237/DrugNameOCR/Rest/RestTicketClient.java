@@ -71,6 +71,7 @@ public class RestTicketClient
     public void logout( String ticket )
     {
         RestAssured.baseURI = authUri;
+        @SuppressWarnings( "unused" )
         Response response = given()//.log().all()
                 .request().with().param( "service", service ).expect().statusCode( 200 ).when().delete( "/cas/v1/tickets/" + ticket );
         //  response.then().log().all();

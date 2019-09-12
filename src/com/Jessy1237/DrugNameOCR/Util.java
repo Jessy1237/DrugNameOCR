@@ -304,7 +304,7 @@ public class Util
                     split = text[i][0][j].split( " " );
                     joDrugName.put( "corrected name", split[wordIndex] ); // put the word in
                     joDrugName.put( "corrected name spelling confidence", sims[i][0][j][wordIndex] ); //put in the spelling confidence
-
+                    joDrugName.put( "word index", "" + wordIndex );
                     split = drugNames[i][j][k][1].split( "`" );
                     joDrugName.put( "associated name", split[0] );
                     joDrugName.put( "Similarity to Associated name", split[1] );
