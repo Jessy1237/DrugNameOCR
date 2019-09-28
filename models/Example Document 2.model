@@ -1,0 +1,21 @@
+{
+	"boxes":[
+		"BoundingBox: id='1-0' minX='0' minY='1752' maxX='429' maxY='1933'",
+		"BoundingBox: id='3-2' minX='0' minY='1470' maxX='655' maxY='1697'",
+		"BoundingBox: id='4' minX='280' minY='1116' maxX='893' maxY='1415'",
+		"BoundingBox: id='5' minX='0' minY='1079' maxX='250' maxY='1412'",
+		"BoundingBox: id='6' minX='643' minY='727' maxX='1166' maxY='1025'",
+		"BoundingBox: id='7' minX='0' minY='689' maxX='460' maxY='1023'",
+		"BoundingBox: id='8-9-10' minX='0' minY='438' maxX='1214' maxY='628'",
+		"BoundingBox: id='12-11' minX='0' minY='227' maxX='446' maxY='413'",
+		"BoundingBox: id='13' minX='866' minY='86' maxX='1209' maxY='273'",
+		"BoundingBox: id='14' minX='0' minY='83' maxX='352' maxY='202'",
+		"BoundingBox: id='15' minX='330' minY='0' maxX='890' maxY='59'"
+	],
+	"rois":[
+		"RegionOfInterest: id=`Drug Info` main=`BoundingBox: id='7' minX='0' minY='725' maxX='460' maxY='1023'` rst=`WORDS` pair=`BoundingBox: id='6' minX='643' minY='727' maxX='1166' maxY='1025'"
+	],
+	"width":"1214",
+	"id":"Example Document 2",
+	"height":"1933"
+}

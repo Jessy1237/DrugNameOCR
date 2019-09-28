@@ -26,14 +26,6 @@ hs_err_pid*
 *.classpath
 *.project
 .settings/*
-tessdata/configs/api_config
-tessdata/configs/digits
-tessdata/configs/hocr
-tessdata/eng.traineddata
-tessdata/osd.traineddata
-tessdata/pdf.ttf
-tessdata/pdf.ttx
 /bin/
 /imgs/*
-/models/*
 google credentials.json

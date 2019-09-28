@@ -33,6 +33,12 @@ This execution type is for when you want to process an image and extract some dr
 ```
 "<model dir>" "<HMM path>" "<SpellCOrrectionsMap path>" "<UMLS API key>" "<path to google cloud vision credentials json file>" <img 1 args> <img 2 args>...
 ```
+
+#### Required Files:
+* tesseract data folder "tessdata"
+* DrugName.hmm
+* Your generated model files in a directory
+
 #### Required Accounts:
 * [UMLS](https://www.nlm.nih.gov/research/umls/index.html) - When signing up just say you're on working on a project and they will give you a free login. Took a couple days.
 * [Google Cloud Account](https://cloud.google.com/apis/) - They do give a certain amount of units free per month for the google cloud vision API. I think it is around 1000 images a month, after that your account will get charged. You also need to follow some of their documentation on how to enable the permissions for your google cloud account to run the cloud vision api and how to get the json credentials file.

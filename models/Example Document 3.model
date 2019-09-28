@@ -1,0 +1,14 @@
+{
+	"boxes":[
+		"BoundingBox: id='0' minX='0' minY='218' maxX='1863' maxY='1173'",
+		"BoundingBox: id='1' minX='0' minY='71' maxX='798' maxY='197'",
+		"BoundingBox: id='2' minX='1467' minY='34' maxX='1787' maxY='152'",
+		"BoundingBox: id='3' minX='0' minY='0' maxX='356' maxY='43'"
+	],
+	"rois":[
+		"RegionOfInterest: id=`Drug Info` main=`BoundingBox: id='Drugs' minX='495' minY='230' maxX='825' maxY='1158'` rst=`WORDS` pair=`null`"
+	],
+	"width":"1863",
+	"id":"Example Document 3",
+	"height":"1289"
+}
