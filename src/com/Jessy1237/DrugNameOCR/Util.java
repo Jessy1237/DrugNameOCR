@@ -162,10 +162,18 @@ public class Util
                 }
                 else
                 {
-                    result = spellCorrectOCRResult( hmm, lineSplit[j] );
-                    String[] split = result.split( "`" );
-                    line += split[0] + " ";
-                    sims[i][j] = Double.parseDouble( split[1] );
+                    if ( containsInvalidChar( lineSplit[j].toLowerCase() ) )
+                    {
+                        line += lineSplit[j] + " ";
+                        sims[i][j] = -1.0;
+                    }
+                    else
+                    {
+                        result = spellCorrectOCRResult( hmm, lineSplit[j] );
+                        String[] split = result.split( "`" );
+                        line += split[0] + " ";
+                        sims[i][j] = Double.parseDouble( split[1] );
+                    }
                 }
 
             }
@@ -316,8 +324,11 @@ public class Util
                 //If the length is 2 then we know to add the pair bounding box line text. i.e. possible gp instructions in pair bb.
                 if ( text[i].length == 2 )
                 {
-                    joLine.put( "Pair BB original lineText", originalText[i][1][j] );
-                    joLine.put( "Pair BB corrected lineText", text[i][1][j] );
+                    if ( j < originalText[i][1].length )
+                    {
+                        joLine.put( "Pair BB original lineText", originalText[i][1][j] );
+                        joLine.put( "Pair BB corrected lineText", text[i][1][j] );
+                    }
                 }
 
                 jaLines.add( joLine );
@@ -561,6 +572,25 @@ public class Util
         }
 
         return stateSeq;
+    }
+
+    /**
+     * Checks if the OCR result contains any chars that we are unable to spell check.
+     * 
+     * @param word The word to check for invalid char. The word needs to be in lower case
+     * @return true if the word contains an invalid char
+     */
+    private boolean containsInvalidChar( String word )
+    {
+        for ( int i = 0; i < word.length(); i++ )
+        {
+            char c = word.charAt( i );
+            if ( !( ( c >= ' ' && c <= ';' ) || c == '[' || c == ']' || ( c >= 'a' && c <= 'z' )) )
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
