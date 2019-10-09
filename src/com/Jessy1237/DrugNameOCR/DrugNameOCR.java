@@ -64,6 +64,11 @@ public class DrugNameOCR
         }
     }
 
+    /**
+     * This method adds a spell correction mapping to the spell correction map.
+     * 
+     * @param args The arguments required for this execution path.
+     */
     public static void executeSpellingAddition( String[] args )
     {
         if ( args.length != 3 )
@@ -81,6 +86,11 @@ public class DrugNameOCR
         }
     }
 
+    /**
+     * This method checks the candidates against the ocr result to see which has the best levenshtein distance
+     * 
+     * @param args The arguments required for this execution path
+     */
     public static void executeCandidateCheck( String[] args )
     {
         if ( args.length < 2 )
@@ -260,7 +270,7 @@ public class DrugNameOCR
      * This method is for the creating a model execution path of the program. It will process the image and create a model template populated with the found bounding boxes in the image. All you will
      * need to do is fill out the blank region of interests array in the JSON file.
      * 
-     * @param args
+     * @param args The arguments required for this execution path
      */
     public static void executeCreateModel( String[] args )
     {
