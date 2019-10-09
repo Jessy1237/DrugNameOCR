@@ -157,7 +157,7 @@ public class DrugNameOCR
                             if ( specifier.startsWith( "-A" ) ) //Automatic Cropping
                             {
                                 System.out.println( "Finding bounding boxes....." );
-                                List<BoundingBox> combined = util.combineOverlapBB( ih.findBindingBoxes( ih.getCurrentImage() ), ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) ); //have the combination tolerance as 1.5% of the image width and 1.0% for the image height
+                                List<BoundingBox> combined = util.combineOverlapBB( ih.findBindingBoxes( ih.getCurrentImage() ), ih.getCurrentImage().width(), ih.getCurrentImage().height() );
 
                                 System.out.println( "Finding the best model....." );
                                 Model m = mm.findBestModel( combined, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
@@ -257,8 +257,9 @@ public class DrugNameOCR
     }
 
     /**
-     * This method is for the creating a model execution path of the program. It will process the image and create a model template populated with the found bounding boxes in the image.
-     *  All you will need to do is fill out the blank region of interests array in the JSON file.
+     * This method is for the creating a model execution path of the program. It will process the image and create a model template populated with the found bounding boxes in the image. All you will
+     * need to do is fill out the blank region of interests array in the JSON file.
+     * 
      * @param args
      */
     public static void executeCreateModel( String[] args )
@@ -272,19 +273,21 @@ public class DrugNameOCR
             try
             {
                 Util util = new Util();
+                ModelManager mm = new ModelManager( args[0] );
+                System.out.println( "Loading the Model Manager....." );
                 ImageHandler ih = new ImageHandler( args[1], args[2], true );
+                System.out.println( "Readying img '" + args[1] + args[2] + "'......" );
                 ih.run();
 
+                System.out.println( "Finding bounding boxes....." );
                 List<BoundingBox> bbs = ih.findBindingBoxes( ih.getCurrentImage() );
-
-                List<BoundingBox> combined = util.combineOverlapBB( bbs, ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) );//have the combination tolerance as 1.5% of the image width and 1.0% for the image height
+                List<BoundingBox> combined = util.combineOverlapBB( bbs, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
                 ih.drawBoundingBoxes( combined, 2 );
-
-                ModelManager mm = new ModelManager( args[0] );
 
                 ArrayList<RegionOfInterest> rois = new ArrayList<RegionOfInterest>();
                 rois.add( new RegionOfInterest() );
 
+                System.out.println( "Creating the template model....." );
                 mm.writeModelFile( new Model( ih.getImageName(), new ArrayList<BoundingBox>( combined ), rois, ih.getCurrentImage().width(), ih.getCurrentImage().height() ) );
             }
             catch ( Exception e )
