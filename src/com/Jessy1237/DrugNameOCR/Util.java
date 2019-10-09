@@ -403,15 +403,19 @@ public class Util
      * This method searches through the list of bounding boxes and merges/combined any overlapping bounding boxes into one, larger bounding box.
      * 
      * @param boxes The original list of bounding boxes to check for overlaps
-     * @param toleranceX the +- value to add to the X values
-     * @param toleranceY the +- value to add to the Y values
+     * @param width the width of the image
+     * @param height the height of the image
      * @return The list of combined/merged bounding boxes
      */
-    public List<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int toleranceX, int toleranceY )
+    public List<BoundingBox> combineOverlapBB( List<BoundingBox> boxes, int width, int height )
     {
         LinkedHashMap<BoundingBox, BoundingBox> mapBBtoCombinedBB = new LinkedHashMap<BoundingBox, BoundingBox>();
         LinkedHashSet<BoundingBox> combinedBBs = new LinkedHashSet<BoundingBox>();
         boolean stillOverlappingBB = true;
+
+        //have the combination tolerance as 1.5% of the image width and 1.0% for the image height
+        int toleranceX = ( int ) ( width * 0.015 );
+        int toleranceY = ( int ) ( height * 0.01 );
 
         combinedBBs.addAll( boxes );
 
@@ -585,7 +589,7 @@ public class Util
         for ( int i = 0; i < word.length(); i++ )
         {
             char c = word.charAt( i );
-            if ( !( ( c >= ' ' && c <= ';' ) || c == '[' || c == ']' || ( c >= 'a' && c <= 'z' )) )
+            if ( !( ( c >= ' ' && c <= ';' ) || c == '[' || c == ']' || ( c >= 'a' && c <= 'z' ) ) )
             {
                 return true;
             }

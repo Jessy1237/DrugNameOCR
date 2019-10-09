@@ -45,7 +45,7 @@ public class BoundingBoxGenerationTest
                 //Uncomment this next line if you want to check the combining of the overlapping bounding boxes
                 ih.drawBoundingBoxes( bbs, 2 );
 
-                List<BoundingBox> combined = util.combineOverlapBB( bbs, ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) );//have the combination tolerance as 1.5% of the image width and 1.0% for the image height
+                List<BoundingBox> combined = util.combineOverlapBB( bbs, ih.getCurrentImage().width(), ih.getCurrentImage().height() );//have the combination tolerance as 1.5% of the image width and 1.0% for the image height
                 ih.drawBoundingBoxes( combined, 2 );
 
                 ModelManager mm = new ModelManager( "models" );
