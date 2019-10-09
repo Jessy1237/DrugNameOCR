@@ -2,6 +2,7 @@ package com.Jessy1237.DrugNameOCR;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -28,6 +29,7 @@ public class DrugNameOCR
     private final static String SPELLING_ADDITION = "SA";
     private final static String CANDIDATE_CHECK = "CC";
     private final static String OCR = "OCR";
+    private final static String CREATE_MODEL = "CM";
 
     public static void main( String[] args )
     {
@@ -35,7 +37,7 @@ public class DrugNameOCR
 
         if ( args.length == 0 )
         {
-            System.out.println( "Not enough arguments. Need at least an execution type argument. i.e. SA, CC or OCR" );
+            System.out.println( "Not enough arguments. Need at least an execution type argument. i.e. SA, CC, CM or OCR" );
         }
         else
         {
@@ -50,6 +52,14 @@ public class DrugNameOCR
             else if ( args[0].equalsIgnoreCase( OCR ) )
             {
                 executeOCR( Arrays.copyOfRange( args, 1, args.length ) );
+            }
+            else if ( args[0].equalsIgnoreCase( CREATE_MODEL ) )
+            {
+                executeCreateModel( Arrays.copyOfRange( args, 1, args.length ) );
+            }
+            else
+            {
+                System.out.println( "Unknown Execution type '" + args[0] + "'" );
             }
         }
     }
@@ -244,6 +254,44 @@ public class DrugNameOCR
 
         System.out.println( "Writing OCR Results to file....." );
         util.writeResultsToFile( m, originalText, text, sims, drugNames, ih.getImageName() );
+    }
+
+    /**
+     * This method is for the creating a model execution path of the program. It will process the image and create a model template populated with the found bounding boxes in the image.
+     *  All you will need to do is fill out the blank region of interests array in the JSON file.
+     * @param args
+     */
+    public static void executeCreateModel( String[] args )
+    {
+        if ( args.length != 3 )
+        {
+            System.out.println( "ARGS: <exec type> \"<model directory>\" \"<image directory>\'\" \"<image name>\"\nFor Example: CC \"models/\" \"imgs/\" \"image 1.jpg\" " );
+        }
+        else
+        {
+            try
+            {
+                Util util = new Util();
+                ImageHandler ih = new ImageHandler( args[1], args[2], true );
+                ih.run();
+
+                List<BoundingBox> bbs = ih.findBindingBoxes( ih.getCurrentImage() );
+
+                List<BoundingBox> combined = util.combineOverlapBB( bbs, ( int ) ( ih.getCurrentImage().width() * 0.015 ), ( int ) ( ih.getCurrentImage().height() * 0.01 ) );//have the combination tolerance as 1.5% of the image width and 1.0% for the image height
+                ih.drawBoundingBoxes( combined, 2 );
+
+                ModelManager mm = new ModelManager( args[0] );
+
+                ArrayList<RegionOfInterest> rois = new ArrayList<RegionOfInterest>();
+                rois.add( new RegionOfInterest() );
+
+                mm.writeModelFile( new Model( ih.getImageName(), new ArrayList<BoundingBox>( combined ), rois, ih.getCurrentImage().width(), ih.getCurrentImage().height() ) );
+            }
+            catch ( Exception e )
+            {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
