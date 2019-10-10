@@ -215,7 +215,7 @@ public class Util
         }
 
         double sim = new StateWeightedLevenshtein( this ).similarityPercentage( ocrResult.toLowerCase(), out.trim() );
-        if ( sim < 70.0f ) //If less than 70% similarity after spell correction then keep the original ocr result TODO: Investigate a better similarity cutoff
+        if ( sim < 60.0f ) //If less than 60% similarity after spell correction then keep the original ocr result TODO: Investigate a better similarity cutoff
             return ocrResult + "`-1";
 
         return out.trim() + "`" + sim;

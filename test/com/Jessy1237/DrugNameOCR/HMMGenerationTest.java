@@ -126,7 +126,7 @@ public class HMMGenerationTest
             String[] corruptions = CharacterCorruption.values()[sequence[i]].getCorruptions();
             int num = rand.nextInt( 100 );
 
-            if ( num < 29 ) //20% chance to corrupt the character
+            if ( num < 19 ) //20% chance to corrupt the character
             {
                 if ( corruptions.length > 0 )
                 {
