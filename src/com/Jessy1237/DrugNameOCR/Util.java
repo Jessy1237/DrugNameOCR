@@ -709,7 +709,7 @@ public class Util
         j( "j", new String[] { "i", } ),
         k( "k", new String[] { "x" } ),
         l( "l", new String[] { "i", "1", "!" } ),
-        m( "m", new String[] { "n", "h", "i" } ),
+        m( "m", new String[] { "n", "h" } ),
         n( "n", new String[] { "m", "h" } ),
         o( "o", new String[] { "a", "0", "q" } ),
         p( "p", new String[] { "o" } ),
