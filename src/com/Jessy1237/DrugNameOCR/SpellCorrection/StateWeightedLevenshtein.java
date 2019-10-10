@@ -5,7 +5,7 @@ import com.Jessy1237.DrugNameOCR.Util.CharacterCorruption;
 
 /**
  * This class is based off of the WeightedLevenshtein class from
- * <a href="https://github.com/tdebatty/java-string-similarity/blob/master/src/main/java/info/debatty/java/stringsimilarity/WeightedLevenshtein.java"> java-string-similarity</a> by tdebatty. However
+ * <a href="https://github.com/tdebatty/java-string-similarity/blob/master/src/main/java/info/debatty/java/stringsimilarity/WeightedLevenshtein.java"> java-string-similarity</a> by Thibault Debatty "tdebatty". However
  * instead of comparing characters we will be comparing the states from the spell correction HMM, as we treat insertions and deletions as substitutions of 1 char with 2 or 2 chars with 1 respectively.
  * 
  * @author Jesse Sieunarine
