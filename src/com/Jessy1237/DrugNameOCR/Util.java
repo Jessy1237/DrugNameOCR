@@ -197,11 +197,17 @@ public class Util
         for ( String s : ocrResult.split( " " ) )
         {
 
+            if(s.length() == 0) //Found that empty words would break the code when trying to find the most probable states as the emission sequence would be empty
+            {
+                out += s.toLowerCase();
+                continue;
+            }
+            
             int iterations = 0;
             String incorrectWord = s.toLowerCase();
             String correctedWord = incorrectWord;
             String tempWord;
-
+            
             do
             {
                 iterations++;

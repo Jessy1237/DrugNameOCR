@@ -6,7 +6,7 @@
 		"BoundingBox: id='3' minX='0' minY='0' maxX='356' maxY='43'"
 	],
 	"rois":[
-		"RegionOfInterest: id=`Drug Info` main=`BoundingBox: id='Drugs' minX='495' minY='230' maxX='825' maxY='1158'` rst=`WORDS` pair=`null`"
+		"RegionOfInterest: id=`Drug Info` main=`BoundingBox: id='Drugs' minX='503' minY='229' maxX='833' maxY='1160'` rst=`WORDS` pair=`null`"
 	],
 	"width":"1863",
 	"id":"Example Document 3",
