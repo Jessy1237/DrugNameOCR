@@ -348,8 +348,6 @@ public class ImageHandler implements Runnable
             rotatedRect.angle += 90.f;
         }
 
-        System.out.println( rotatedRect.angle );
-
         return rotatedRect.angle;
     }
 
