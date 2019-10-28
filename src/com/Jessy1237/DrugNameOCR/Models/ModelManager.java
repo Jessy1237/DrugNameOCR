@@ -153,7 +153,7 @@ public class ModelManager
      */
     public Model findBestModel( List<BoundingBox> combined, int width, int height )
     {
-        double sim = 70.0f;
+        double sim = 0.7f;
         Model model = null;
         for ( Model m : models )
         {

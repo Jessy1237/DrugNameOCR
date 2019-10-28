@@ -348,7 +348,49 @@ public class ImageHandler implements Runnable
             rotatedRect.angle += 90.f;
         }
 
+        System.out.println( rotatedRect.angle );
+
         return rotatedRect.angle;
+    }
+
+    /**
+     * Deskews the given image by the given skew angle. It will also write the deskewed image to file if the createImages boolean of the image handler is true
+     * 
+     * @param src The image to deskew
+     * @param angle The angle to deskew by
+     * @return Returns the deskewed image
+     */
+    private Mat deskew( Mat img )
+    {
+        Point center = new Point( img.width() / 2, img.height() / 2 );
+
+        Mat inverse = new Mat();
+
+        Core.bitwise_not( img, inverse );
+
+        writeImage( inverse, "I" );
+
+        double skew = calcSkew( inverse );
+        int i = 1;
+        do
+        {
+            Mat rotImage = Imgproc.getRotationMatrix2D( center, skew, 1.0 );
+            //1.0 means 100 % scale
+            Size size = new Size( img.width(), img.height() );
+
+            Imgproc.warpAffine( inverse, inverse, rotImage, size, Imgproc.INTER_LINEAR ); //Allows for the image to be rotated so that it fits the original image size
+
+            skew = calcSkew( inverse );
+            i++;
+        }
+        while ( Math.abs( skew ) > 0.2 && i < 5 );//Found that the deskew algorithm can achieve better results if it is applied iteratively. So until the skewed angle is small or has ran 5 times then we will keep deskewing the image
+        //TODO: For now 0.2 degrees is used as a cap and then a hard cap of 5 iterations but an investigation needs to be done to find more suitable limits
+
+        Core.bitwise_not( inverse, img );
+
+        writeImage( img, "DS" );
+
+        return img;
     }
 
     private Mat cropImage( Mat img )
@@ -392,34 +434,6 @@ public class ImageHandler implements Runnable
         }
 
         return img.submat( r );
-    }
-
-    /**
-     * Deskews the given image by the given skew angle. It will also write the deskewed image to file if the createImages boolean of the image handler is true
-     * 
-     * @param src The image to deskew
-     * @param angle The angle to deskew by
-     * @return Returns the deskewed image
-     */
-    private Mat deskew( Mat img )
-    {
-        Point center = new Point( img.width() / 2, img.height() / 2 );
-
-        Mat inverse = new Mat();
-
-        Core.bitwise_not( img, inverse );
-
-        writeImage( inverse, "I" );
-
-        Mat rotImage = Imgproc.getRotationMatrix2D( center, calcSkew( inverse ), 1.0 );
-        //1.0 means 100 % scale
-        Size size = new Size( img.width(), img.height() );
-        Imgproc.warpAffine( inverse, inverse, rotImage, size, Imgproc.INTER_LINEAR ); //Allows for the image to be rotated so that it fits the original image size
-        Core.bitwise_not( inverse, img );
-
-        writeImage( img, "DS" );
-
-        return img;
     }
 
     /**
