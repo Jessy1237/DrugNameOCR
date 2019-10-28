@@ -124,7 +124,7 @@ public class ImageHandler implements Runnable
      * @param img The image to find the text regions in
      * @return a list of bounding boxes for each contour found in the image
      */
-    public List<BoundingBox> findBindingBoxes( Mat img )
+    public List<BoundingBox> findBoundingBoxes( Mat img )
     {
         ArrayList<BoundingBox> boxes = new ArrayList<BoundingBox>();
         ArrayList<MatOfPoint> contours = new ArrayList<MatOfPoint>();

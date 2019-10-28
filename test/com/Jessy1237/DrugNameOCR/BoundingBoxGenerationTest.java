@@ -40,7 +40,7 @@ public class BoundingBoxGenerationTest
                 //ih.drawBoundingBoxes( xmlh.getBoxes(), 3 );
                 //System.out.println( ocrh.getString() );
 
-                List<BoundingBox> bbs = ih.findBindingBoxes( ih.getCurrentImage() );
+                List<BoundingBox> bbs = ih.findBoundingBoxes( ih.getCurrentImage() );
 
                 //Uncomment this next line if you want to check the combining of the overlapping bounding boxes
                 ih.drawBoundingBoxes( bbs, 2 );

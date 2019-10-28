@@ -28,7 +28,7 @@ public class ModelSimilarityTest
                 ImageHandler ih = new ImageHandler( args[0], true );
                 ih.run();
 
-                List<BoundingBox> bbs = ih.findBindingBoxes( ih.getCurrentImage() );
+                List<BoundingBox> bbs = ih.findBoundingBoxes( ih.getCurrentImage() );
                 ih.drawBoundingBoxes( bbs, 2 );
 
                 List<BoundingBox> combined = util.combineOverlapBB( bbs, ih.getCurrentImage().width(), ih.getCurrentImage().height() ); //have the combination tolerance as 1.5% of the image width and 1.0% for the image height

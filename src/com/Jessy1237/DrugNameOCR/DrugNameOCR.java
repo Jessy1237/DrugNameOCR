@@ -167,7 +167,7 @@ public class DrugNameOCR
                             if ( specifier.startsWith( "-A" ) ) //Automatic Cropping
                             {
                                 System.out.println( "Finding bounding boxes....." );
-                                List<BoundingBox> combined = util.combineOverlapBB( ih.findBindingBoxes( ih.getCurrentImage() ), ih.getCurrentImage().width(), ih.getCurrentImage().height() );
+                                List<BoundingBox> combined = util.combineOverlapBB( ih.findBoundingBoxes( ih.getCurrentImage() ), ih.getCurrentImage().width(), ih.getCurrentImage().height() );
 
                                 System.out.println( "Finding the best model....." );
                                 Model m = mm.findBestModel( combined, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
@@ -290,7 +290,7 @@ public class DrugNameOCR
                 ih.run();
 
                 System.out.println( "Finding bounding boxes....." );
-                List<BoundingBox> bbs = ih.findBindingBoxes( ih.getCurrentImage() );
+                List<BoundingBox> bbs = ih.findBoundingBoxes( ih.getCurrentImage() );
                 List<BoundingBox> combined = util.combineOverlapBB( bbs, ih.getCurrentImage().width(), ih.getCurrentImage().height() );
                 ih.drawBoundingBoxes( combined, 2 );
 
