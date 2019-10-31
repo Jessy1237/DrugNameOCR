@@ -24,7 +24,7 @@ java -jar DrugNameOCR.jar <execution type> <args>
 ```
 
 # Execution Types:
-There are three different execution paths, OCR (OCR), Spell Correction Addition (SA) and Candidate Check (CC).
+There are three different execution paths, OCR (OCR), Spell Correction Addition (SA),Candidate Check (CC) and Create Model (CM).
 
 ## OCR:
 This execution type is for when you want to process an image and extract some drug names with OCR.
@@ -65,7 +65,7 @@ This execution type is for when you have ascertained a correct spelling for an o
 **NOTE: The ocr result and correct spelling arg should only be one word each, it cannot be a sentence.**
 
 ## CC:
-This execution tpye is for when you want to get some confidence levels for candidate drug names when compared to the original ocr result.
+This execution type is for when you want to get some confidence levels for candidate drug names when compared to the original ocr result.
 		
 #### ARGS:
 ```
@@ -73,6 +73,12 @@ This execution tpye is for when you want to get some confidence levels for candi
 ```
 You can have multiple candidate words to check against the original ocr result word.
 
-#### Results:
-Will be outputted to the root directory of the program with the file name "<ocr result>.result"
+## CM:
+This execution type is for when you want to create a template model from an example document image.
+		
+#### ARGS:
+```
+"<model directory>" "<image directory>'" "<image name>"...
+```
+
 	

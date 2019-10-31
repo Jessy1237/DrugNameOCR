@@ -2,7 +2,9 @@ package com.Jessy1237.DrugNameOCR;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -14,7 +16,7 @@ public class SpellCorrectionTest
 
     private final static int NUMBER_OF_LINES_TO_READ = 9000;
 
-    public static void main( String[] args )
+    public static void main( String[] args ) throws FileNotFoundException
     {
         if ( args.length != 2 )
         {
@@ -27,6 +29,9 @@ public class SpellCorrectionTest
             int correct = 0;
             int numWords = 0;
 
+            PrintWriter pw = new PrintWriter( new File( "test-result.txt" ) );
+            System.out.println();
+            pw.println( "#Incorrect Word, Recovered Word, Correct Word" );
             try ( BufferedReader br = new BufferedReader( new FileReader( args[1] ) ) )
             {
                 br.readLine(); //First line of the csv file is the headers of each column so skip it
@@ -51,6 +56,7 @@ public class SpellCorrectionTest
                         String correctedWord = util.spellCorrectOCRResult( hmm, incorrectWord ).split( "`" )[0];
 
                         System.out.println( incorrectWord + ", " + correctedWord + ", " + correctWord );
+                        pw.println( incorrectWord + ", " + correctedWord + ", " + correctWord );
 
                         if ( correctWord.equalsIgnoreCase( correctedWord ) )
                             correct++;
@@ -61,6 +67,9 @@ public class SpellCorrectionTest
                 br.close();
 
                 System.out.println( String.format( "Read in %d test words and successfully corrected %d (%.2f%%)", numWords, correct, ( double ) ( ( double ) correct / ( double ) numWords * 100.0 ) ) );
+                pw.println( String.format( "Read in %d test words and successfully corrected %d (%.2f%%)", numWords, correct, ( double ) ( ( double ) correct / ( double ) numWords * 100.0 ) ) );
+                pw.flush();
+                pw.close();
             }
             catch ( Exception e )
             {

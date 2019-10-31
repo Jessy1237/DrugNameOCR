@@ -16,7 +16,7 @@
 		"BoundingBox: id='17' minX='430' minY='0' maxX='776' maxY='86'"
 	],
 	"rois":[
-		"RegionOfInterest: id=`Drug Info` main=`BoundingBox: id='7' minX='0' minY='850' maxX='460' maxY='1090'` rst=`WORDS` pair=`BoundingBox: id='6' minX='635' minY='850' maxX='1152' maxY='1090'`"
+		"RegionOfInterest: id=`Drug Info` main=`BoundingBox: id='7' minX='0' minY='850' maxX='460' maxY='1090'` rst=`WORDS` pair=`BoundingBox: id='6' minX='635' minY='841' maxX='1152' maxY='1090'`"
 	],
 	"width":"1152",
 	"id":"Example Document",
